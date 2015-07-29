@@ -1,0 +1,5 @@
+dumb-init (0.0.1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Wed, 29 Jul 2015 15:39:11 -0700
