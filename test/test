@@ -1,0 +1,37 @@
+#!/bin/sh -eum
+# Try sending all signals via dumb-init to our `print-signals` script, ensure
+# they were all received.
+. ./testlib.sh
+
+# The easiest way to communicate with the background process is with a FIFO.
+# (piping spawns additional subshells and makes it hard to get the right PID)
+fifo=$(mktemp -u)
+mkfifo -m 600 "$fifo"
+dumb-init ./print-signals "$fifo" &
+pid="$!"
+
+# Wait for `print-signals` to indicate it's ready.
+head -n1 "$fifo" > /dev/null
+
+for expected in $(catchable_signals); do
+	kill -s "$expected" "$pid"
+	echo -n "Sent signal ${expected}... "
+	received=$(timeout 1 head -n1 "$fifo") || {
+		echo
+		echo "Error: Didn't receive signal within 1 second."
+		exit 1
+	}
+
+	echo "received signal ${received}."
+
+	if [ "$expected" -ne "$received" ]; then
+		echo "Error: Received signal $received, but expected signal $expected."
+		exit 1
+	fi
+done
+
+# Turn off job monitoring so we don't get a spurious "[1] + Killed" printed
+set +m
+
+kill -9 "$pid"
+rm "$fifo"
