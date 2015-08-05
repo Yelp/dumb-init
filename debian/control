@@ -1,0 +1,26 @@
+Source: dumb-init
+Section: utils
+Priority: extra
+Maintainer: Chris Kuehl <ckuehl@yelp.com>
+Build-Depends: debhelper (>= 7), gcc, fakeroot
+Standards-Version: 3.9.6
+
+Package: dumb-init
+Architecture: any
+Depends: ${misc:Depends}
+Description: Simple wrapper script which proxies signals to a child
+ Docker runs your processes as PID1. The kernel doesn't apply default signal
+ handling to PID1 processes, so if your process doesn't register a custom
+ signal handler, signals like TERM will just bounce off your process.
+ .
+ This can result in cases where sending signals to a `docker run` process
+ results in the run process exiting, but the container continuing in the
+ background.
+ .
+ A workaround is to wrap your script in this proxy, which runs as PID1. Your
+ process then runs as some other PID, and the kernel won't treat the signals
+ that are proxied to them specially.
+ .
+ The proxy dies when your process dies, so it must not double-fork or do other
+ weird things (this is basically a requirement for doing things sanely in
+ Docker anyway).
