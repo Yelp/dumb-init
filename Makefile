@@ -26,7 +26,8 @@ docker-image:
 itest: itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
 
 itest_lucid: builddeb-docker
-	docker run -v $(PWD):/mnt:ro ubuntu:lucid $(DOCKER_TEST)
+	docker run -v $(PWD):/mnt:ro ubuntu:lucid \
+		sh -ec "apt-get -y install timeout; $(DOCKER_TEST)"
 
 itest_precise: builddeb-docker
 	docker run -v $(PWD):/mnt:ro ubuntu:precise $(DOCKER_TEST)

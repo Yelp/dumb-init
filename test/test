@@ -7,16 +7,18 @@
 # (piping spawns additional subshells and makes it hard to get the right PID)
 fifo=$(mktemp -u)
 mkfifo -m 600 "$fifo"
+read_cmd="timeout 1 head -n1 $fifo"
+
 dumb-init ./print-signals "$fifo" &
 pid="$!"
 
 # Wait for `print-signals` to indicate it's ready.
-head -n1 "$fifo" > /dev/null
+$read_cmd > /dev/null
 
 for expected in $(catchable_signals); do
 	kill -s "$expected" "$pid"
 	echo -n "Sent signal ${expected}... "
-	received=$(timeout 1 head -n1 "$fifo") || {
+	received=$($read_cmd) || {
 		echo
 		echo "Error: Didn't receive signal within 1 second."
 		exit 1
