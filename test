@@ -1,0 +1,15 @@
+#!/bin/sh -eux
+run_tests() {
+	./test-proxies-signals
+	./test-exit-status
+	./test-help-message
+}
+
+cd tests
+
+echo "Running tests in normal mode."
+run_tests
+
+echo "Running tests in debug mode."
+export DUMB_INIT_DEBUG=1
+run_tests

@@ -1,7 +1,9 @@
 #!/bin/sh -eum
+# dumb-init should proxy all possible signals to the child process.
+
 # Try sending all signals via dumb-init to our `print-signals` script, ensure
 # they were all received.
-. ./testlib.sh
+. ./lib/testlib.sh
 
 # The easiest way to communicate with the background process is with a FIFO.
 # (piping spawns additional subshells and makes it hard to get the right PID)
@@ -9,7 +11,7 @@ fifo=$(mktemp -u)
 mkfifo -m 600 "$fifo"
 read_cmd="timeout 1 head -n1 $fifo"
 
-dumb-init ./print-signals "$fifo" &
+dumb-init ./lib/print-signals "$fifo" &
 pid="$!"
 
 # Wait for `print-signals` to indicate it's ready.

@@ -2,7 +2,7 @@
 # Print received signals into a file, one per line
 file="$1"
 
-. ./testlib.sh
+. ./lib/testlib.sh
 
 for i in $(catchable_signals); do
 	trap "echo $i > \"$file\"" "$i"
