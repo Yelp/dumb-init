@@ -1,0 +1,10 @@
+#!/bin/sh -u
+# dumb-init should exit with the same exit status as the process it launches.
+for i in $(seq 0 255); do
+	status=$(dumb-init sh -c "exit $i"; echo $?)
+
+	if [ "$status" -ne "$i" ]; then
+		echo "Error: Expected exit status $i, got $status."
+		exit 1
+	fi
+done

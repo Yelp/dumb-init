@@ -1,4 +1,4 @@
-DOCKER_TEST := sh -c 'dpkg -i /mnt/dist/*.deb && cd /mnt/test && ./test'
+DOCKER_TEST := sh -c 'dpkg -i /mnt/dist/*.deb && cd /mnt && ./test'
 
 .PHONY: build
 build:

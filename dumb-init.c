@@ -31,12 +31,35 @@ void signal_handler(int signum) {
 	}
 }
 
+void print_help(char *argv[]) {
+	fprintf(stderr,
+		"Usage: %s COMMAND [[ARG] ...]\n"
+		"\n"
+		"Docker runs your processes as PID1. The kernel doesn't apply default signal\n"
+		"handling to PID1 processes, so if your process doesn't register a custom\n"
+		"signal handler, signals like TERM will just bounce off your process.\n"
+		"\n"
+		"This can result in cases where sending signals to a `docker run` process\n"
+		"results in the run process exiting, but the container continuing in the\n"
+		"background.\n"
+		"\n"
+		"A workaround is to wrap your script in this proxy, which runs as PID1. Your\n"
+		"process then runs as some other PID, and the kernel won't treat the signals\n"
+		"that are proxied to them specially.\n"
+		"\n"
+		"The proxy dies when your process dies, so it must not double-fork or do other\n"
+		"weird things (this is basically a requirement for doing things sanely in\n"
+		"Docker anyway).\n",
+		argv[0]
+	);
+}
+
 int main(int argc, char *argv[]) {
-	int signum;
-	char* debug_env;
+	int signum, exit_status, status = 0;
+	char *debug_env;
 
 	if (argc < 2) {
-		fprintf(stderr, "Try providing some arguments.\n");
+		print_help(argv);
 		return 1;
 	}
 
@@ -70,10 +93,13 @@ int main(int argc, char *argv[]) {
 		if (debug)
 			fprintf(stderr, "Child spawned with PID %d.\n", child);
 
-		waitpid(child, NULL, 0);
+		waitpid(child, &status, 0);
+		exit_status = WEXITSTATUS(status);
 
 		if (debug)
-			fprintf(stderr, "Child exited, goodbye.\n");
+			fprintf(stderr, "Child exited with status %d, goodbye.\n", exit_status);
+
+		return exit_status;
 	}
 
 	return 0;
