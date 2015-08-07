@@ -1,0 +1,27 @@
+-   repo: https://github.com/pre-commit/pre-commit-hooks.git
+    sha: 003e43251aea1da33f2072f2365ec8b9ceaae070
+    hooks:
+    -   id: autopep8-wrapper
+    -   id: check-added-large-files
+    -   id: check-docstring-first
+    -   id: check-json
+    -   id: check-merge-conflict
+    -   id: check-xml
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: double-quote-string-fixer
+    -   id: end-of-file-fixer
+    -   id: flake8
+    -   id: name-tests-test
+    -   id: requirements-txt-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/asottile/reorder_python_imports.git
+    sha: 3d86483455ab5bd06cc1069fdd5ac57be5463f10
+    hooks:
+    -   id: reorder-python-imports
+-   repo: https://github.com/Lucas-C/pre-commit-hooks.git
+    sha: 181a63c511691da58116fa19a7241956018660bc
+    hooks:
+    -   id: remove-tabs
+        files: \.py

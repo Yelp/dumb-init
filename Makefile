@@ -22,6 +22,14 @@ builddeb-docker: docker-image
 docker-image:
 	docker build -t dumb-init-build .
 
+.PHONY: test
+test:
+	tox
+
+.PHONY: install-hooks
+install-hooks:
+	tox -e pre-commit -- install -f --install-hooks
+
 .PHONY: itest itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
 itest: itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
 
