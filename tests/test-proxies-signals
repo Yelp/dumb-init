@@ -1,5 +1,6 @@
 #!/bin/sh -eum
 # dumb-init should proxy all possible signals to the child process.
+dumb_init="$1"
 
 # Try sending all signals via dumb-init to our `print-signals` script, ensure
 # they were all received.
@@ -11,7 +12,7 @@ fifo=$(mktemp -u)
 mkfifo -m 600 "$fifo"
 read_cmd="timeout 1 head -n1 $fifo"
 
-dumb-init ./lib/print-signals "$fifo" &
+$dumb_init ./lib/print-signals "$fifo" &
 pid="$!"
 
 # Wait for `print-signals` to indicate it's ready.

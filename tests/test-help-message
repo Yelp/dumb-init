@@ -2,10 +2,12 @@
 # dumb-init should say something useful when called with no arguments, and exit
 # nonzero.
 
-status=$(dumb-init > /dev/null 2>&1; echo $?)
+dumb_init="$1"
+
+status=$($dumb_init > /dev/null 2>&1; echo $?)
 
 if [ "$status" -ne 0 ]; then
-	msg=$(dumb-init 2>&1 || true)
+	msg=$($dumb_init 2>&1 || true)
 	msg_len=${#msg}
 
 	if [ "$msg_len" -le 50 ]; then
