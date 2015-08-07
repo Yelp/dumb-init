@@ -38,5 +38,9 @@ done
 # Turn off job monitoring so we don't get a spurious "[1] + Killed" printed
 set +m
 
-kill -9 "$pid"
+# $pid is the PID of the dumb-init process. Since print-signals ignores all
+# signals, we need to `kill -9` it. If we just `kill -9` the dumb-init process,
+# `print-signals` will still be running. So we instead kill children of the
+# dumb-init process.
+pgrep -P "$pid" | xargs kill -9
 rm "$fifo"
