@@ -1,4 +1,5 @@
-DOCKER_TEST := sh -c 'dpkg -i /mnt/dist/*.deb && cd /mnt && ./test'
+DOCKER_DEB_TEST := sh -c 'dpkg -i /mnt/dist/*.deb && cd /mnt && ./test'
+DOCKER_PYTHON_TEST := sh -c 'apt-get update && apt-get install python python-setuptools && cd /mnt && ./test'
 
 .PHONY: build
 build:
@@ -35,19 +36,20 @@ itest: itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_st
 
 itest_lucid: builddeb-docker
 	docker run -v $(PWD):/mnt:ro ubuntu:lucid \
-		sh -ec "apt-get -y install timeout; $(DOCKER_TEST)"
+		sh -ec "apt-get -y install timeout; $(DOCKER_DEB_TEST)"
 
 itest_precise: builddeb-docker
-	docker run -v $(PWD):/mnt:ro ubuntu:precise $(DOCKER_TEST)
+	docker run -v $(PWD):/mnt:ro ubuntu:precise $(DOCKER_DEB_TEST)
 
 itest_trusty: builddeb-docker
-	docker run -v $(PWD):/mnt:ro ubuntu:trusty $(DOCKER_TEST)
+	docker run -v $(PWD):/mnt:ro ubuntu:trusty $(DOCKER_DEB_TEST)
 
 itest_wheezy: builddeb-docker
-	docker run -v $(PWD):/mnt:ro debian:wheezy $(DOCKER_TEST)
+	docker run -v $(PWD):/mnt:ro debian:wheezy $(DOCKER_DEB_TEST)
 
 itest_jessie: builddeb-docker
-	docker run -v $(PWD):/mnt:ro debian:jessie $(DOCKER_TEST)
+	docker run -v $(PWD):/mnt:ro debian:jessie $(DOCKER_DEB_TEST)
 
 itest_stretch: builddeb-docker
-	docker run -v $(PWD):/mnt:ro debian:stretch $(DOCKER_TEST)
+	docker run -v $(PWD):/mnt:ro debian:stretch $(DOCKER_PYTHON_TEST)
+	docker run -v $(PWD):/mnt:ro debian:stretch $(DOCKER_DEB_TEST)
