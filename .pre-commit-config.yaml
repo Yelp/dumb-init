@@ -24,4 +24,3 @@
     sha: 181a63c511691da58116fa19a7241956018660bc
     hooks:
     -   id: remove-tabs
-        files: \.py

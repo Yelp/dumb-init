@@ -7,14 +7,14 @@ dumb_init="$1"
 status=$($dumb_init > /dev/null 2>&1; echo $?)
 
 if [ "$status" -ne 0 ]; then
-	msg=$($dumb_init 2>&1 || true)
-	msg_len=${#msg}
+    msg=$($dumb_init 2>&1 || true)
+    msg_len=${#msg}
 
-	if [ "$msg_len" -le 50 ]; then
-		echo "Error: Expected dumb-init with no arguments to print a useful message, but it was only ${msg_len} chars long."
-		exit 1
-	fi
+    if [ "$msg_len" -le 50 ]; then
+        echo "Error: Expected dumb-init with no arguments to print a useful message, but it was only ${msg_len} chars long."
+        exit 1
+    fi
 else
-	echo "Error: Expected dumb-init with no arguments to return nonzero, but it returned ${status}."
-	exit 1
+    echo "Error: Expected dumb-init with no arguments to return nonzero, but it returned ${status}."
+    exit 1
 fi

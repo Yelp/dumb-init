@@ -52,10 +52,11 @@ class build_cexe(Command):
         self.build_temp = None
 
     def finalize_options(self):
-        self.set_undefined_options('build',
-                                   ('build_scripts', 'build_scripts'),
-                                   ('build_temp', 'build_temp'),
-                                   )
+        self.set_undefined_options(
+            'build',
+            ('build_scripts', 'build_scripts'),
+            ('build_temp', 'build_temp'),
+        )
 
     def run(self):
         # stolen and simplified from distutils.command.build_ext

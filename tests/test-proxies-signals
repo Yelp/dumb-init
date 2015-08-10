@@ -19,20 +19,20 @@ pid="$!"
 $read_cmd > /dev/null
 
 for expected in $(catchable_signals); do
-	kill -s "$expected" "$pid"
-	echo -n "Sent signal ${expected}... "
-	received=$($read_cmd) || {
-		echo
-		echo "Error: Didn't receive signal within 1 second."
-		exit 1
-	}
+    kill -s "$expected" "$pid"
+    echo -n "Sent signal ${expected}... "
+    received=$($read_cmd) || {
+        echo
+        echo "Error: Didn't receive signal within 1 second."
+        exit 1
+    }
 
-	echo "received signal ${received}."
+    echo "received signal ${received}."
 
-	if [ "$expected" -ne "$received" ]; then
-		echo "Error: Received signal $received, but expected signal $expected."
-		exit 1
-	fi
+    if [ "$expected" -ne "$received" ]; then
+        echo "Error: Received signal $received, but expected signal $expected."
+        exit 1
+    fi
 done
 
 # Turn off job monitoring so we don't get a spurious "[1] + Killed" printed

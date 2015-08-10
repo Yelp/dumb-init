@@ -5,7 +5,7 @@ file="$1"
 . ./lib/testlib.sh
 
 for i in $(catchable_signals); do
-	trap "echo $i > \"$file\"" "$i"
+    trap "echo $i > \"$file\"" "$i"
 done
 
 echo 'ready' > "$file"
