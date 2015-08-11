@@ -1,3 +1,5 @@
 dumb-init
 dist/
 *.deb
+*.egg-info
+.tox

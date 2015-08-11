@@ -1,8 +1,19 @@
-#!/bin/sh -eux
+#!/bin/bash -eux
+if [ "$#" -eq 1 ]; then
+    dumb_init_bin=$(readlink -f "$1")
+else
+    dumb_init_bin=$(which dumb-init) || {
+        echo "Couldn't find dumb-init on your path, exiting."
+        exit 1
+    }
+fi
+
+echo "Running with dumb-init at '$dumb_init_bin'"
+
 run_tests() {
-	./test-proxies-signals
-	./test-exit-status
-	./test-help-message
+    ./test-proxies-signals "$dumb_init_bin"
+    ./test-exit-status "$dumb_init_bin"
+    ./test-help-message "$dumb_init_bin"
 }
 
 cd tests

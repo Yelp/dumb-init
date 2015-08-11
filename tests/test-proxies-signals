@@ -1,5 +1,6 @@
-#!/bin/sh -eum
+#!/bin/bash -euxm
 # dumb-init should proxy all possible signals to the child process.
+dumb_init="$1"
 
 # Try sending all signals via dumb-init to our `print-signals` script, ensure
 # they were all received.
@@ -11,31 +12,35 @@ fifo=$(mktemp -u)
 mkfifo -m 600 "$fifo"
 read_cmd="timeout 1 head -n1 $fifo"
 
-dumb-init ./lib/print-signals "$fifo" &
+$dumb_init ./lib/print-signals "$fifo" &
 pid="$!"
 
 # Wait for `print-signals` to indicate it's ready.
 $read_cmd > /dev/null
 
 for expected in $(catchable_signals); do
-	kill -s "$expected" "$pid"
-	echo -n "Sent signal ${expected}... "
-	received=$($read_cmd) || {
-		echo
-		echo "Error: Didn't receive signal within 1 second."
-		exit 1
-	}
+    kill -s "$expected" "$pid"
+    echo -n "Sent signal ${expected}... "
+    received=$($read_cmd) || {
+        echo
+        echo "Error: Didn't receive signal within 1 second."
+        exit 1
+    }
 
-	echo "received signal ${received}."
+    echo "received signal ${received}."
 
-	if [ "$expected" -ne "$received" ]; then
-		echo "Error: Received signal $received, but expected signal $expected."
-		exit 1
-	fi
+    if [ "$expected" -ne "$received" ]; then
+        echo "Error: Received signal $received, but expected signal $expected."
+        exit 1
+    fi
 done
 
 # Turn off job monitoring so we don't get a spurious "[1] + Killed" printed
 set +m
 
-kill -9 "$pid"
+# $pid is the PID of the dumb-init process. Since print-signals ignores all
+# signals, we need to `kill -9` it. If we just `kill -9` the dumb-init process,
+# `print-signals` will still be running. So we instead kill children of the
+# dumb-init process.
+pkill -9 -P "$pid"
 rm "$fifo"
