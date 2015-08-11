@@ -60,6 +60,14 @@ If you don't have an internal apt server, you can use `dpkg -i` to install the
 (mounting a directory or `wget`-ing it are some options).
 
 
+### Option 3: Installing from PyPI
+
+dumb-init can be installed [from PyPI](https://pypi.python.org/pypi/dumb-init)
+using pip. Since dumb-init is written in C, you'll want to first install gcc
+(on Debian/Ubuntu, `apt-get install gcc` is sufficient), then just `pip install
+dumb-init`.
+
+
 ## Usage
 
 Once installed inside your Docker container, simply prefix your commands with
