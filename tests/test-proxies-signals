@@ -42,5 +42,5 @@ set +m
 # signals, we need to `kill -9` it. If we just `kill -9` the dumb-init process,
 # `print-signals` will still be running. So we instead kill children of the
 # dumb-init process.
-pgrep -P "$pid" | xargs kill -9
+pkill -9 -P "$pid"
 rm "$fifo"
