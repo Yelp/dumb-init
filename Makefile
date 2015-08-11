@@ -43,9 +43,7 @@ install-hooks:
 .PHONY: itest itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
 itest: itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
 
-itest_lucid: _itest_deb-ubuntu-lucid
-	# lucid is special; the version of python-pip is too old for our setuptools
-	# hackery to work, so we only run the .deb tests
+itest_lucid: _itest-ubuntu-lucid
 	@true
 itest_precise: _itest-ubuntu-precise
 	@true
