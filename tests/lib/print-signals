@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/bin/bash -eux
 # Print received signals into a file, one per line
 file="$1"
 
@@ -10,5 +10,6 @@ done
 
 echo 'ready' > "$file"
 
-# loop forever
+echo 'loop forever...'
+set +x
 while :; do true; done

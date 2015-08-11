@@ -1,4 +1,4 @@
-#!/bin/sh -eum
+#!/bin/bash -euxm
 # dumb-init should proxy all possible signals to the child process.
 dumb_init="$1"
 

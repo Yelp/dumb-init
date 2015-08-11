@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/bin/bash -eux
 if [ "$#" -eq 1 ]; then
     dumb_init_bin=$(readlink -f "$1")
 else

@@ -1,4 +1,4 @@
-#!/bin/sh -u
+#!/bin/bash -eux
 dumb_init="$1"
 
 # dumb-init should exit with the same exit status as the process it launches.

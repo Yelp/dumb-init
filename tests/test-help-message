@@ -1,4 +1,4 @@
-#!/bin/sh -u
+#!/bin/bash -eux
 # dumb-init should say something useful when called with no arguments, and exit
 # nonzero.
 
