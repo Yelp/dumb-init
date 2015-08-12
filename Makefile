@@ -2,6 +2,7 @@ DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 DOCKER_DEB_TEST := sh -euxc ' \
 	apt-get update \
 	&& apt-get install -y --no-install-recommends procps \
+	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& dpkg -i /mnt/dist/*.deb \
 	&& cd /mnt \
 	&& ./test \
@@ -9,8 +10,13 @@ DOCKER_DEB_TEST := sh -euxc ' \
 DOCKER_PYTHON_TEST := sh -uexc ' \
 	apt-get update \
 	&& apt-get install -y --no-install-recommends python-pip build-essential procps \
-	&& pip install -vv /mnt \
-	&& cd /mnt \
+	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
+	&& tmp=$$(mktemp -d) \
+	&& cp -r /mnt/* "$$tmp" \
+	&& cd "$$tmp" \
+	&& python setup.py clean \
+	&& python setup.py sdist \
+	&& pip install -vv dist/*.tar.gz \
 	&& ./test \
 '
 
@@ -62,9 +68,9 @@ _itest-%: _itest_deb-% _itest_python-%
 	@true
 
 _itest_python-%:
-	$(eval DOCKER_IMG := $(shell echo $@ | cut -d- -f2 | sed 's/-/:/'))
+	$(eval DOCKER_IMG := $(shell echo $@ | cut -d- -f2- | sed 's/-/:/'))
 	$(DOCKER_RUN_TEST) $(DOCKER_IMG) $(DOCKER_PYTHON_TEST)
 
-_itest_deb-%:
-	$(eval DOCKER_IMG := $(shell echo $@ | cut -d- -f2 | sed 's/-/:/'))
+_itest_deb-%: builddeb-docker
+	$(eval DOCKER_IMG := $(shell echo $@ | cut -d- -f2- | sed 's/-/:/'))
 	$(DOCKER_RUN_TEST) $(DOCKER_IMG) $(DOCKER_DEB_TEST)
