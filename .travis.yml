@@ -1,0 +1,22 @@
+language: python
+sudo: required
+
+env:
+   global:
+      - DEBIAN_FRONTEND=noninteractive
+   matrix:
+      - BUILD_TYPE=make CC=gcc
+      - BUILD_TYPE=make CC=clang
+      - BUILD_TYPE=debian
+      - BUILD_TYPE=python TOXENV=py27
+      - BUILD_TYPE=python TOXENV=py33
+      - BUILD_TYPE=python TOXENV=py34
+
+install:
+   - sudo apt-get update
+   - sudo apt-get install -y build-essential devscripts
+
+script:
+   - 'if [ "$BUILD_TYPE" == "make" ]; then make build && ./test ./dumb-init; fi'
+   - 'if [ "$BUILD_TYPE" == "debian" ]; then make builddeb && sudo dpkg -i dist/*.deb && ./test; fi'
+   - 'if [ "$BUILD_TYPE" == "python" ]; then pip install tox && tox; fi'
