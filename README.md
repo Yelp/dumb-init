@@ -1,6 +1,9 @@
 dumb-init
 ========
 
+[![Build Status](https://travis-ci.org/Yelp/dumb-init.svg?branch=master](https://travis-ci.org/Yelp/dumb-init) [![PyPI version](https://badge.fury.io/py/dumb-init.svg)](https://pypi.python.org/pypi/dumb-init)
+
+
 `dumb-init` is a simple process designed to run as PID 1 inside Docker
 containers and proxy signals to a single child process.
 
