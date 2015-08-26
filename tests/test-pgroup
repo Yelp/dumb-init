@@ -1,0 +1,27 @@
+#!/bin/bash -eux
+# dumb-init should proxy signals to a process group rooted at its child when
+# requested.
+dumb_init="$1"
+
+DUMB_INIT_PROCESS_GROUP=1 $dumb_init nohup sh -c "yes 'oh, hi' | tail & yes error | tail >&2" > /dev/null &
+pid="$!"
+
+sleep 1
+shell_pid=$(pgrep -P "$pid")
+
+# ensure processes are running
+child_count=$(pgrep -g "$shell_pid" | grep -v "$shell_pid" | wc -l) || true
+
+if [ "$child_count" -ne 4 ]; then
+    echo "Error: Expected 4 children, instead we had ${child_count}."
+    exit 1
+fi
+
+# ensure processes are dead after signal
+kill -TERM "$pid"
+child_count=$(pgrep -g "$shell_pid" | grep -v "$shell_pid" | wc -l) || true
+
+if [ "$child_count" -ne 0 ]; then
+    echo "Error: Expected 0 children, instead we had ${child_count}."
+    exit 1
+fi

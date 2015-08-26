@@ -11,9 +11,15 @@ fi
 echo "Running with dumb-init at '$dumb_init_bin'"
 
 run_tests() {
-    ./test-proxies-signals "$dumb_init_bin"
-    ./test-exit-status "$dumb_init_bin"
-    ./test-help-message "$dumb_init_bin"
+    export DUMB_INIT_PROCESS_GROUP
+    for DUMB_INIT_PROCESS_GROUP in 0 1; do
+        ./test-proxies-signals "$dumb_init_bin"
+        ./test-exit-status "$dumb_init_bin"
+        ./test-help-message "$dumb_init_bin"
+    done
+
+    ./test-pgroup "$dumb_init_bin"
+    ./test-no-pgroup "$dumb_init_bin"
 }
 
 cd tests

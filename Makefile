@@ -1,3 +1,5 @@
+CFLAGS=-std=gnu99 -static -Wall -Werror
+
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 DOCKER_DEB_TEST := sh -euxc ' \
 	apt-get update \
@@ -22,7 +24,7 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 
 .PHONY: build
 build:
-	$(CC) -static -Wall -Werror -o dumb-init dumb-init.c
+	$(CC) $(CFLAGS) -o dumb-init dumb-init.c
 
 .PHONY: clean
 clean: clean-tox

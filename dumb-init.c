@@ -5,9 +5,10 @@
  * Usage:
  *   ./dumb-init python -c 'while True: pass'
  *
- * To get debug output on stderr, run with DUMB_INIT_DEBUG=1.
+ * To get debug output on stderr, run with DUMB_INIT_DEBUG=1
  */
 
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,18 +17,24 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#define DEBUG(...) do { \
+    if (debug) { \
+        fprintf(stderr, __VA_ARGS__); \
+    } \
+} while (0)
+
 pid_t child = -1;
 char debug = 0;
+char use_process_group = 1;
 
 void signal_handler(int signum) {
-    if (debug)
-        fprintf(stderr, "Received signal %d.\n", signum);
+    DEBUG("Received signal %d.\n", signum);
 
     if (child > 0) {
-        kill(child, signum);
-
-        if (debug)
-            fprintf(stderr, "Forwarded signal to child.\n");
+        kill(use_process_group ? -child : child, signum);
+        DEBUG("Forwarded signal to child.\n");
+    } else {
+        DEBUG("Didn't forward signal, no child exists yet.");
     }
 }
 
@@ -49,14 +56,18 @@ void print_help(char *argv[]) {
         "\n"
         "The proxy dies when your process dies, so it must not double-fork or do other\n"
         "weird things (this is basically a requirement for doing things sanely in\n"
-        "Docker anyway).\n",
+        "Docker anyway).\n"
+        "\n"
+        "By default, dumb-init starts a process group and kills all processes in it.\n"
+        "This is usually useful behavior, but if for some reason you wish to disable\n"
+        "it, run with DUMB_INIT_PROCESS_GROUP=0.\n",
         argv[0]
     );
 }
 
 int main(int argc, char *argv[]) {
     int signum, exit_status, status = 0;
-    char *debug_env;
+    char *debug_env, *pgroup_env;
 
     if (argc < 2) {
         print_help(argv);
@@ -64,9 +75,16 @@ int main(int argc, char *argv[]) {
     }
 
     debug_env = getenv("DUMB_INIT_DEBUG");
-    if (debug_env && strcmp(debug_env, "1") == 0)
+    if (debug_env && strcmp(debug_env, "1") == 0) {
         debug = 1;
+        DEBUG("Running in debug mode.\n");
+    }
 
+    pgroup_env = getenv("DUMB_INIT_PROCESS_GROUP");
+    if (pgroup_env && strcmp(pgroup_env, "0") == 0) {
+        use_process_group = 0;
+        DEBUG("Not running in process group mode.\n");
+    }
 
     /* register signal handlers */
     for (signum = 1; signum < 32; signum++) {
@@ -88,16 +106,29 @@ int main(int argc, char *argv[]) {
     }
 
     if (child == 0) {
+        if (use_process_group) {
+            pid_t result = setpgid(0, 0);
+            if (result != 0) {
+                fprintf(
+                    stderr,
+                    "Unable to create process group (errno=%d %s). Exiting.\n",
+                    errno,
+                    strerror(errno)
+                );
+                exit(1);
+            }
+            DEBUG("Set process group ID of child to its own PID.\n");
+        }
+
         execvp(argv[1], &argv[1]);
     } else {
-        if (debug)
-            fprintf(stderr, "Child spawned with PID %d.\n", child);
+        DEBUG("Child spawned with PID %d.\n", child);
 
+        /* wait for child to exit */
         waitpid(child, &status, 0);
         exit_status = WEXITSTATUS(status);
 
-        if (debug)
-            fprintf(stderr, "Child exited with status %d, goodbye.\n", exit_status);
+        DEBUG("Child exited with status %d, goodbye.\n", exit_status);
 
         return exit_status;
     }
