@@ -18,8 +18,8 @@ run_tests() {
         ./test-help-message "$dumb_init_bin"
     done
 
-    ./test-pgroup "$dumb_init_bin"
-    ./test-no-pgroup "$dumb_init_bin"
+    DUMB_INIT_PROCESS_GROUP=0 ./test-pgroup "$dumb_init_bin" 4
+    DUMB_INIT_PROCESS_GROUP=1 ./test-pgroup "$dumb_init_bin" 0
 }
 
 cd tests

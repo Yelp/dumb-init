@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
         waitpid(child, &status, 0);
         exit_status = WEXITSTATUS(status);
 
-        DEBUG("Child exited with status %d, goodbye.\n", exit_status);
+        DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
 
         return exit_status;
     }
