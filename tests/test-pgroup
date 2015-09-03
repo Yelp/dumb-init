@@ -29,4 +29,5 @@ if [ "$child_count" -ne "$after_count" ]; then
     exit 1
 fi
 
-xargs kill -9 <<< "$pids"
+echo 'Killing any leftover processes.'
+xargs kill -9 <<< "$pids" || true
