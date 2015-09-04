@@ -1,0 +1,33 @@
+#!/bin/bash -eux
+# dumb-init should proxy signals to a process group rooted at its child when
+# requested.
+dumb_init="$1"
+after_count="$2"
+
+$dumb_init sh -c "yes 'oh, hi' | tail & yes error | tail >&2" &
+pid="$!"
+
+sleep 1
+pstree -p "$pid"
+pids=$(pstree -p "$pid" | grep -Po '(\d+)' | grep -Po '\d+')
+
+# ensure processes are running
+child_count=$(ps -o pid= $pids | wc -l) || true
+
+if [ "$child_count" -ne 6 ]; then
+    echo "Error: Expected 6 children, instead we had ${child_count}."
+    exit 1
+fi
+
+# ensure processes are dead after signal
+kill -TERM "$pid"
+sleep 1
+child_count=$(ps -o pid= $pids | wc -l) || true
+
+if [ "$child_count" -ne "$after_count" ]; then
+    echo "Error: Expected $after_count children, instead we had ${child_count}."
+    exit 1
+fi
+
+echo 'Killing any leftover processes.'
+xargs kill -9 <<< "$pids" || true
