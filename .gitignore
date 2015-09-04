@@ -3,3 +3,4 @@ dist/
 *.deb
 *.egg-info
 .tox
+build/

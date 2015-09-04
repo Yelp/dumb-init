@@ -42,6 +42,9 @@ void print_help(char *argv[]) {
     fprintf(stderr,
         "Usage: %s COMMAND [[ARG] ...]\n"
         "\n"
+        "dumb-init is a simple process designed to run as PID 1 inside Docker\n"
+        "containers and proxy signals to child processes.\n"
+        "\n"
         "Docker runs your processes as PID1. The kernel doesn't apply default signal\n"
         "handling to PID1 processes, so if your process doesn't register a custom\n"
         "signal handler, signals like TERM will just bounce off your process.\n"
@@ -58,7 +61,7 @@ void print_help(char *argv[]) {
         "weird things (this is basically a requirement for doing things sanely in\n"
         "Docker anyway).\n"
         "\n"
-        "By default, dumb-init starts a process group and kills all processes in it.\n"
+        "By default, dumb-init starts a process group and signals all processes in it.\n"
         "This is usually useful behavior, but if for some reason you wish to disable\n"
         "it, run with DUMB_INIT_PROCESS_GROUP=0.\n",
         argv[0]
