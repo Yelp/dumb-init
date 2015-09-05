@@ -1,0 +1,12 @@
+machine:
+    services:
+        - docker
+
+dependencies:
+    override:
+        - /bin/true
+
+test:
+    override:
+        - ci/circle:
+            parallel: true

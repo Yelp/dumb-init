@@ -1,0 +1,59 @@
+#!/usr/bin/env python2.7
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import os
+import sys
+from math import ceil
+from subprocess import call
+
+BOLD = '\033[1m'
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[33m'
+RESET = '\033[0m'
+
+NUM_WORKERS = 4
+TARGETS = [
+    'itest_lucid',
+    'itest_precise',
+    'itest_trusty',
+    'itest_wheezy',
+    'itest_jessie',
+    'itest_stretch',
+]
+TARGETS_PER_WORKER = int(ceil(len(TARGETS) / NUM_WORKERS))
+
+
+def log(line, color=''):
+    print(BOLD + color + line + RESET)
+
+
+if __name__ == '__main__':
+    node_index = int(os.environ['CIRCLE_NODE_INDEX'])
+    assert node_index < NUM_WORKERS
+
+    my_targets = TARGETS[node_index::NUM_WORKERS]
+    status = 0
+
+    for target in my_targets:
+        log('Executing target {}...'.format(target), color=YELLOW)
+        target_status = call(('make', target))
+
+        if target_status == 0:
+            log(
+                'Target {} completed successfully'.format(target),
+                color=GREEN,
+            )
+        else:
+            status = target_status
+            log(
+                'Error! Target {} failed with exit status {}'.format(
+                    target,
+                    target_status,
+                ),
+                color=RED,
+            )
+
+    sys.exit(status)
