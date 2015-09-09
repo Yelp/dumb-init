@@ -110,8 +110,8 @@ int main(int argc, char *argv[]) {
 
     if (child == 0) {
         if (use_process_group) {
-            pid_t result = setpgid(0, 0);
-            if (result != 0) {
+            pid_t result = setsid();
+            if (result == -1) {
                 fprintf(
                     stderr,
                     "Unable to create process group (errno=%d %s). Exiting.\n",
