@@ -1,2 +1,2 @@
-virtualenv_run
+.tox
 .git

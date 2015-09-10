@@ -12,7 +12,6 @@ echo "Running with dumb-init at '$dumb_init_bin'"
 
 run_tests() {
     ./test-tty "$dumb_init_bin"
-    return 0
     
     export DUMB_INIT_SETSID
     for DUMB_INIT_SETSID in 0 1; do
@@ -21,8 +20,8 @@ run_tests() {
         ./test-help-message "$dumb_init_bin"
     done
 
-    DUMB_INIT_SETSID=0 ./test-pgroup "$dumb_init_bin" 4
-    DUMB_INIT_SETSID=1 ./test-pgroup "$dumb_init_bin" 0
+    DUMB_INIT_SETSID=0 ./test-setsid "$dumb_init_bin" 4
+    DUMB_INIT_SETSID=1 ./test-setsid "$dumb_init_bin" 0
 }
 
 cd tests
