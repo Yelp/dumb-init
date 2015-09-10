@@ -1,20 +1,16 @@
-language: python
+language: c
 sudo: required
+services:
+   - docker
 
 env:
    matrix:
-      - BUILD_TYPE=make CC=gcc
-      - BUILD_TYPE=make CC=clang
-      - BUILD_TYPE=debian
-      - BUILD_TYPE=python TOXENV=py27
-      - BUILD_TYPE=python TOXENV=py33
-      - BUILD_TYPE=python TOXENV=py34
-
-install:
-   - sudo apt-get update
-   - sudo DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential devscripts
+      - ITEST_TARGET=itest_lucid
+      - ITEST_TARGET=itest_precise
+      - ITEST_TARGET=itest_trusty
+      - ITEST_TARGET=itest_wheezy
+      - ITEST_TARGET=itest_jessie
+      - ITEST_TARGET=itest_stretch
 
 script:
-   - 'if [ "$BUILD_TYPE" == "make" ]; then make build && ./test ./dumb-init; fi'
-   - 'if [ "$BUILD_TYPE" == "debian" ]; then make builddeb && sudo dpkg -i dist/*.deb && ./test; fi'
-   - 'if [ "$BUILD_TYPE" == "python" ]; then pip install tox && tox; fi'
+   - make "$ITEST_TARGET"
