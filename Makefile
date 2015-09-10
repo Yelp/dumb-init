@@ -3,7 +3,7 @@ CFLAGS=-std=gnu99 -static -Wall -Werror
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 DOCKER_DEB_TEST := sh -euxc ' \
 	apt-get update \
-	&& apt-get install -y --no-install-recommends procps psmisc libpcre3 \
+	&& apt-get install -y --no-install-recommends python procps psmisc libpcre3 \
 	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& dpkg -i /mnt/dist/*.deb \
 	&& cd /mnt \
@@ -11,7 +11,7 @@ DOCKER_DEB_TEST := sh -euxc ' \
 '
 DOCKER_PYTHON_TEST := sh -uexc ' \
 	apt-get update \
-	&& apt-get install -y --no-install-recommends python-pip build-essential procps psmisc libpcre3 \
+	&& apt-get install -y --no-install-recommends python python-pip build-essential procps psmisc libpcre3 \
 	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
