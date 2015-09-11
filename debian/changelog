@@ -1,6 +1,7 @@
 dumb-init (0.2.0) unstable; urgency=low
 
   * Use setsid for process-group behavior. This fixes tty interaction.
+  * Properly reap zombie processes.
 
  -- Kent Wills <rkwills@yelp.com>  Thu, 10 Sep 2015 13:33:25 -0700
 
