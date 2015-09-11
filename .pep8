@@ -1,0 +1,11 @@
+[flake8]
+max-line-length=131
+exclude=.tox,*.tmp,tmp/
+max-complexity=10
+ignore = E265
+# E265 -- block comment should start with "# "
+
+[pep8]
+max-line-length=131
+ignore = E265
+# E265 -- block comment should start with "# "

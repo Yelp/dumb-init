@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 EOF = b'\x04'
 
 
@@ -12,13 +12,17 @@ def ttyflags(fd):
     T.tcsetattr(fd, T.TCSANOW, attrs)
 
 
-def tac(dumb_init):
+def pipeline(dumb_init, cmd):
     """
-    run tac. if it fails to complete in 1 second send SIGKILL and exit with an
-    error.
+    run a pipeline under dumb-init
+    if it fails to complete in 1 second send SIGKILL and exit with an error.
     """
     from os import execvp
-    execvp('timeout', ('timeout', '1', dumb_init, 'tac'))
+    execvp('timeout', (
+        'timeout', '1',
+        'sh', '-c',
+        'xargs yes | %s %s' % (dumb_init, cmd),
+    ))
 
 
 def readall(fd):
@@ -29,7 +33,10 @@ def readall(fd):
         try:
             chunk = read(fd, 1 << 10)
         except OSError as error:
-            if error.errno == 5:  # linux pty EOF
+            if error.errno in (
+                5,  # linux pty EOF
+                11,  # nonblocking EOF
+            ):
                 return result
             else:
                 raise
@@ -39,34 +46,131 @@ def readall(fd):
             result += chunk
 
 
-def test(fd):
-    """write to tac via the pty and verify its output"""
+def tty_foreground(fd):
+    """write to head-3 via the pty and verify its output"""
     ttyflags(fd)
     from os import write
     assert write(fd, b'1\n2\n3\n') == 6
     assert write(fd, EOF * 2) == 2
     output = readall(fd)
-    assert output == b'3\n2\n1\n', repr(output)
-    print('PASS')
+    print output
+
+    import re
+    assert re.match(b'''^\
+\[dumb-init debug\] Running in debug mode\.
+\[dumb-init debug\] process group created\.
+\[dumb-init debug\] Child spawned with PID \d+\.
+1 2 3
+1 2 3
+1 2 3
+\[dumb-init debug\] Received SIGCHLD, calling waitpid\(\)\.
+\[dumb-init debug\] A child with PID \d+ exited with exit status 0\.
+\[dumb-init debug\] Child exited with status 0\. Goodbye\.
+yes: standard output: Broken pipe
+yes: write error
+$''', output)
 
 
-def test_tty(dumb_init):
+def test_tty_foreground(dumb_init):
     """
     Ensure processes wrapped by dumb-init can write successfully, given a tty
     """
     import pty
     pid, fd = pty.fork()
     if pid == 0:
-        tac(dumb_init)
+        pipeline(dumb_init, 'pv -q')
     else:
-        test(fd)
+        tty_foreground(fd)
+
+
+def blocking_io(fd, blocking=True):
+    """set this file to non-blcoking mode"""
+    from os import O_NONBLOCK
+    import fcntl as F
+    flags = F.fcntl(fd, F.F_GETFL)
+    if blocking:
+        flags &= ~O_NONBLOCK
+    else:
+        flags |= O_NONBLOCK
+    F.fcntl(fd, F.F_SETFL, flags)
+
+
+def expect(fd, expected, time_limit=1):
+    from time import time as now
+    print('waiting for %r ...' % expected)
+    start = now()
+    result = ''
+    while expected not in result:
+        chunk = readall(fd)
+        if chunk:
+            print repr(chunk), len(chunk)
+            result += chunk
+        assert now() - start < time_limit
+    return result
+
+
+def tty_background(fd, pid):
+    ttyflags(fd)
+    from os import write
+    assert write(fd, b'1\n2\n3\n') == 6
+    assert write(fd, EOF * 2) == 2
+
+    blocking_io(fd, False)
+    # get some output
+    output = expect(fd, '[print-signals] ready\n')
+
+    # TODO: assert process states (Sleeping / Running)
+    from os import kill
+    import signal as S
+
+    assert S.SIGTSTP == 20
+    kill(-pid, 20)
+    output += expect(fd, '[print-signals] got signal 20\n')
+
+    # TODO: assert process states (sTopped)
+
+    assert S.SIGCONT == 18
+    kill(-pid, 18)
+    output += expect(fd, '[print-signals] got signal 18\n')
+
+    # TODO: assert process states (Running)
+
+    assert S.SIGINT == 2
+    kill(-pid, 2)
+    output += expect(fd, '[print-signals] got signal 2\n')
+
+    kill(-pid, 2)
+    blocking_io(fd, True)
+    output += readall(fd)
+
+    print(output)
+
+    # TODO: assert process states (dead)
+
+
+def test_tty_background(dumb_init):
+    import pty
+    pid, fd = pty.fork()
+    if pid == 0:
+        pipeline(dumb_init, './tests/lib/print-signals')
+    else:
+        tty_background(fd, pid)
+
+
+def test(dumb_init):
+    for test in (
+        test_tty_foreground,
+        test_tty_background,
+    ):
+        test(dumb_init)
+        print('%s: PASS' % test.__name__)
 
 
 def main():
     from os import environ
-    environ['DUMB_INIT_DEBUG'] = '0'  # disable debug output so it doesn't break our assertion
+    environ['DUMB_INIT_DEBUG'] = '1'
     from sys import argv
-    test_tty(argv[1])
+    test(argv[1])
 
 
 main()
