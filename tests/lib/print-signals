@@ -9,12 +9,23 @@ file="${1:-/dev/stdout}"
 
 . $here/testlib.sh
 
+prev_signal=0
+handle() {
+    echo "[print-signals] got signal $1"
+    if [ "$prev_signal" -eq "$1" -a "$1" -eq 2 ]; then
+        echo "[print-signals] got INT twice. exiting."
+        exit 0
+    else
+        prev_signal="$1"
+    fi
+}
+
 for i in $(catchable_signals); do
-    trap "echo $i > \"$file\"" "$i"
+    trap "handle $i > \"$file\"" "$i"
 done
 
-echo 'ready' > "$file"
+echo '[print-signals] ready' > "$file"
 
-echo 'loop forever...'
+echo '[print-signals] loop forever...'
 set +x
 while :; do true; done
