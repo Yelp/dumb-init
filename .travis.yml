@@ -1,16 +1,18 @@
 language: c
 sudo: required
+
 services:
    - docker
 
 env:
    matrix:
-      - ITEST_TARGET=itest_lucid
-      - ITEST_TARGET=itest_precise
-      - ITEST_TARGET=itest_trusty
-      - ITEST_TARGET=itest_wheezy
-      - ITEST_TARGET=itest_jessie
-      - ITEST_TARGET=itest_stretch
+      - MAKE_TARGET=itest_tox
+      - MAKE_TARGET=itest_lucid
+      - MAKE_TARGET=itest_precise
+      - MAKE_TARGET=itest_trusty
+      - MAKE_TARGET=itest_wheezy
+      - MAKE_TARGET=itest_jessie
+      - MAKE_TARGET=itest_stretch
 
 script:
-   - make "$ITEST_TARGET"
+   - make "$MAKE_TARGET"
