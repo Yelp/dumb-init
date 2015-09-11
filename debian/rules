@@ -6,4 +6,6 @@ override_dh_builddeb:
 	dh_builddeb -- -Zgzip
 
 override_dh_auto_test:
-	./test ./dumb-init
+	find . -name '*.pyc' -delete
+	PATH=.:$$PATH py.test tests/
+	ps aux
