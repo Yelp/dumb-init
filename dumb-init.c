@@ -20,7 +20,7 @@
 
 #define DEBUG(...) do { \
     if (debug) { \
-        fprintf(stderr, __VA_ARGS__); \
+        fprintf(stderr, "[dumb-init debug] " __VA_ARGS__); \
     } \
 } while (0)
 
@@ -37,6 +37,15 @@ void signal_handler(int signum) {
     } else {
         DEBUG("Didn't forward signal, no child exists yet.");
     }
+
+    if (
+        signum == SIGTSTP ||  // tty: background yourself
+        signum == SIGTTIN ||  // tty: stop reading
+        signum == SIGTTOU     // tty: stop writing
+    ) {
+        DEBUG("Suspending due to tty signal.\n");
+        kill(getpid(), SIGSTOP);
+    };
 }
 
 void reap_zombies(int signum) {
