@@ -24,7 +24,7 @@ def tac(dumb_init):
 def readall(fd):
     """read until EOF"""
     from os import read
-    result = ''
+    result = b''
     while True:
         try:
             chunk = read(fd, 1 << 10)
