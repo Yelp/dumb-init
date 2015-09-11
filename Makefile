@@ -26,6 +26,15 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
 
+DOCKER_TOX_TEST := sh -uexc ' \
+	apt-get update \
+	&& apt-get install -y --no-install-recommends python-setuptools python3-setuptools python-tox git build-essential $(TEST_PACKAGE_DEPS) \
+	&& tmp=$$(mktemp -ud) \
+	&& cp -r /mnt "$$tmp" \
+	&& cd "$$tmp" \
+    && tox \
+'
+
 .PHONY: build
 build:
 	$(CC) $(CFLAGS) -o dumb-init dumb-init.c
@@ -60,8 +69,11 @@ test:
 install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
 
-.PHONY: itest itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
-itest: itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
+.PHONY: itest_tox itest itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
+itest: itest_tox itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
+
+itest_tox:
+	$(DOCKER_RUN_TEST) debian:jessie $(DOCKER_TOX_TEST)
 
 itest_lucid: _itest-ubuntu-lucid
 itest_precise: _itest-ubuntu-precise
