@@ -10,6 +10,7 @@ DOCKER_DEB_TEST := sh -euxc ' \
 	&& dpkg -i /mnt/dist/*.deb \
 	&& cd /mnt \
 	&& ./test \
+	&& exec dumb-init /mnt/tests/test-zombies \
 '
 DOCKER_PYTHON_TEST := sh -uexc ' \
 	apt-get update \
@@ -22,6 +23,7 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 	&& python setup.py sdist \
 	&& pip install -vv dist/*.tar.gz \
 	&& ./test \
+	&& exec dumb-init /mnt/tests/test-zombies \
 '
 
 .PHONY: build

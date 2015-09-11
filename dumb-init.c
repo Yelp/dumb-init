@@ -8,6 +8,7 @@
  * To get debug output on stderr, run with DUMB_INIT_DEBUG=1
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -23,18 +24,43 @@
     } \
 } while (0)
 
-pid_t child = -1;
+pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
 
 void signal_handler(int signum) {
     DEBUG("Received signal %d.\n", signum);
 
-    if (child > 0) {
-        kill(use_setsid ? -child : child, signum);
+    if (child_pid > 0) {
+        kill(use_setsid ? -child_pid : child_pid, signum);
         DEBUG("Forwarded signal to child.\n");
     } else {
         DEBUG("Didn't forward signal, no child exists yet.");
+    }
+}
+
+void reap_zombies(int signum) {
+    /*
+     * As PID 1, dumb-init is expected to handle reaping of zombie processes.
+     *
+     * If a process's parent exits, the child is orphaned and its new parent is
+     * PID 1. If that child later exits, it becomes a zombie process until its
+     * parent (now dumb-init) calls wait() on it.
+     */
+    int status, exit_status;
+    pid_t killed_pid;
+
+    assert(signum == SIGCHLD);
+    DEBUG("Received SIGCHLD, calling waitpid().\n");
+
+    while ((killed_pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        exit_status = WEXITSTATUS(status);
+        DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
+
+        if (killed_pid == child_pid) {
+            DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
+            exit(exit_status);
+        }
     }
 }
 
@@ -69,7 +95,7 @@ void print_help(char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-    int signum, exit_status, status = 0;
+    int signum;
     char *debug_env, *setsid_env;
 
     if (argc < 2) {
@@ -100,15 +126,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    /* launch our process */
-    child = fork();
+    signal(SIGCHLD, reap_zombies);
 
-    if (child < 0) {
+    /* launch our process */
+    child_pid = fork();
+
+    if (child_pid < 0) {
         fprintf(stderr, "Unable to fork. Exiting.\n");
         return 1;
     }
 
-    if (child == 0) {
+    if (child_pid == 0) {
         if (use_setsid) {
             pid_t result = setsid();
             if (result == -1) {
@@ -125,15 +153,10 @@ int main(int argc, char *argv[]) {
 
         execvp(argv[1], &argv[1]);
     } else {
-        DEBUG("Child spawned with PID %d.\n", child);
-
-        /* wait for child to exit */
-        waitpid(child, &status, 0);
-        exit_status = WEXITSTATUS(status);
-
-        DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
-
-        return exit_status;
+        DEBUG("Child spawned with PID %d.\n", child_pid);
+        for (;;) {
+            pause();
+        }
     }
 
     return 0;
