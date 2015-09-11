@@ -2,7 +2,9 @@ Source: dumb-init
 Section: utils
 Priority: extra
 Maintainer: Chris Kuehl <ckuehl@yelp.com>
-Build-Depends: debhelper (>= 7), gcc, fakeroot, procps
+Uploaders: Kent Wills <rkwills@yelp.com>
+Build-Depends: debhelper (>= 7), gcc, fakeroot, procps, psmisc, libpcre3,
+ python
 Standards-Version: 3.9.6
 
 Package: dumb-init

@@ -44,8 +44,9 @@ behave as you would expect. If your process dies, `dumb-init` will also die.
 
 ### Process group behavior
 
-In its default mode, `dumb-init` establishes a process group rooted at the
-child, and sends signals to the entire process group. This is useful if you
+In its default mode, `dumb-init` establishes a process group (and "session",
+via [setsid(2)](http://man7.org/linux/man-pages/man2/setsid.2.html)) rooted at
+the child, and sends signals to the entire process group. This is useful if you
 have a poorly-behaving child (such as a shell script) which won't normally
 signal its children before dying.
 
@@ -63,7 +64,7 @@ Ordinarily, a TERM sent to the shell would leave those processes running. With
 dumb-init, your subprocesses will receive the same signals your shell does.
 
 If you'd like for signals to only be sent to the direct child, you can set the
-environment variable `DUMB_INIT_PROCESS_GROUP=0` when running `dumb-init`. In this
+environment variable `DUMB_INIT_SETSID=0` when running `dumb-init`. In this
 mode, dumb-init is completely transparent; you can even string multiple
 together (like `dumb-init dumb-init echo 'oh, hi'`).
 

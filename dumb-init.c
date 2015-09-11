@@ -25,13 +25,13 @@
 
 pid_t child = -1;
 char debug = 0;
-char use_process_group = 1;
+char use_setsid = 1;
 
 void signal_handler(int signum) {
     DEBUG("Received signal %d.\n", signum);
 
     if (child > 0) {
-        kill(use_process_group ? -child : child, signum);
+        kill(use_setsid ? -child : child, signum);
         DEBUG("Forwarded signal to child.\n");
     } else {
         DEBUG("Didn't forward signal, no child exists yet.");
@@ -61,16 +61,16 @@ void print_help(char *argv[]) {
         "weird things (this is basically a requirement for doing things sanely in\n"
         "Docker anyway).\n"
         "\n"
-        "By default, dumb-init starts a process group and signals all processes in it.\n"
-        "This is usually useful behavior, but if for some reason you wish to disable\n"
-        "it, run with DUMB_INIT_PROCESS_GROUP=0.\n",
+        "By default, dumb-init starts a process group (and session, see: man 2 setsid)\n"
+        "and signals all processes in it. This is usually useful behavior, but if for\n"
+        "some reason you wish to disable it, run with DUMB_INIT_SETSID=0.\n",
         argv[0]
     );
 }
 
 int main(int argc, char *argv[]) {
     int signum, exit_status, status = 0;
-    char *debug_env, *pgroup_env;
+    char *debug_env, *setsid_env;
 
     if (argc < 2) {
         print_help(argv);
@@ -83,10 +83,10 @@ int main(int argc, char *argv[]) {
         DEBUG("Running in debug mode.\n");
     }
 
-    pgroup_env = getenv("DUMB_INIT_PROCESS_GROUP");
-    if (pgroup_env && strcmp(pgroup_env, "0") == 0) {
-        use_process_group = 0;
-        DEBUG("Not running in process group mode.\n");
+    setsid_env = getenv("DUMB_INIT_SETSID");
+    if (setsid_env && strcmp(setsid_env, "0") == 0) {
+        use_setsid = 0;
+        DEBUG("Not running in setsid mode.\n");
     }
 
     /* register signal handlers */
@@ -109,18 +109,18 @@ int main(int argc, char *argv[]) {
     }
 
     if (child == 0) {
-        if (use_process_group) {
-            pid_t result = setpgid(0, 0);
-            if (result != 0) {
+        if (use_setsid) {
+            pid_t result = setsid();
+            if (result == -1) {
                 fprintf(
                     stderr,
-                    "Unable to create process group (errno=%d %s). Exiting.\n",
+                    "Unable to setsid (errno=%d %s). Exiting.\n",
                     errno,
                     strerror(errno)
                 );
                 exit(1);
             }
-            DEBUG("Set process group ID of child to its own PID.\n");
+            DEBUG("setsid complete.\n");
         }
 
         execvp(argv[1], &argv[1]);

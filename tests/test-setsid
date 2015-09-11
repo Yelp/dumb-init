@@ -1,5 +1,5 @@
 #!/bin/bash -eux
-# dumb-init should proxy signals to a process group rooted at its child when
+# dumb-init should proxy signals to a session rooted at its child when
 # requested.
 dumb_init="$1"
 after_count="$2"

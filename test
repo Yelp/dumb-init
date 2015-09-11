@@ -11,15 +11,17 @@ fi
 echo "Running with dumb-init at '$dumb_init_bin'"
 
 run_tests() {
-    export DUMB_INIT_PROCESS_GROUP
-    for DUMB_INIT_PROCESS_GROUP in 0 1; do
+    ./test-tty "$dumb_init_bin"
+    
+    export DUMB_INIT_SETSID
+    for DUMB_INIT_SETSID in 0 1; do
         ./test-proxies-signals "$dumb_init_bin"
         ./test-exit-status "$dumb_init_bin"
         ./test-help-message "$dumb_init_bin"
     done
 
-    DUMB_INIT_PROCESS_GROUP=0 ./test-pgroup "$dumb_init_bin" 4
-    DUMB_INIT_PROCESS_GROUP=1 ./test-pgroup "$dumb_init_bin" 0
+    DUMB_INIT_SETSID=0 ./test-setsid "$dumb_init_bin" 4
+    DUMB_INIT_SETSID=1 ./test-setsid "$dumb_init_bin" 0
 }
 
 cd tests
