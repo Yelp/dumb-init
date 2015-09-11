@@ -19,13 +19,11 @@ of that after merging!
 
 The process to release a new version is:
 
-1. Run integration tests (`make itest`). Travis doesn't run these, so it's a
-   good idea to make sure they still pass.
-2. Update the version in `setup.py`
-3. Update the Debian changelog with `dch -v {new version}`.
-4. Commit the changes and tag the commit like `v1.0.0`.
-5. `git push --tags origin master`
-6. Run `rm -rf dist && python setup.py sdist` to create a source distribution
-7. Run `twine dist/*` to upload the new version to PyPI
-8. Run `make builddeb` and upload the resulting Debian package to a new
+1. Update the version in `setup.py`
+2. Update the Debian changelog with `dch -v {new version}`.
+3. Commit the changes and tag the commit like `v1.0.0`.
+4. `git push --tags origin master`
+5. Run `rm -rf dist && python setup.py sdist` to create a source distribution
+6. Run `twine upload dist/*` to upload the new version to PyPI
+7. Run `make builddeb-docker` and upload the resulting Debian package to a new
    [GitHub release](https://github.com/Yelp/dumb-init/releases)
