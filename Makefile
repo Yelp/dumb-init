@@ -6,6 +6,7 @@ DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 DOCKER_DEB_TEST := sh -euxc ' \
 	apt-get update \
 	&& apt-get install -y --no-install-recommends $(TEST_PACKAGE_DEPS) \
+	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& dpkg -i /mnt/dist/*.deb \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
@@ -17,6 +18,7 @@ DOCKER_DEB_TEST := sh -euxc ' \
 DOCKER_PYTHON_TEST := sh -uexc ' \
 	apt-get update \
 	&& apt-get install -y --no-install-recommends python-pip build-essential $(TEST_PACKAGE_DEPS) \
+	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
 	&& cd "$$tmp" \

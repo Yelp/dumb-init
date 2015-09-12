@@ -6,6 +6,6 @@ def test_exit_status(both_debug_modes, both_setsid_modes):
     supervises.
     """
     for status in [0, 1, 2, 32, 64, 127, 254, 255]:
-        proc = Popen(('dumb-init', 'sh', '-c', 'exit {}'.format(status)))
+        proc = Popen(('dumb-init', 'sh', '-c', 'exit {0}'.format(status)))
         proc.wait()
         assert proc.returncode == status

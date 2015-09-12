@@ -17,7 +17,7 @@ print_queue = []
 
 
 def unbuffered_print(line):
-    sys.stdout.write('{}\n'.format(line))
+    sys.stdout.write('{0}\n'.format(line))
     sys.stdout.flush()
 
 

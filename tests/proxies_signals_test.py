@@ -18,7 +18,7 @@ def test_prints_signals(both_debug_modes, both_setsid_modes):
 
     for signum in CATCHABLE_SIGNALS:
         proc.send_signal(signum)
-        assert proc.stdout.readline() == '{}\n'.format(signum).encode('ascii')
+        assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
 
     for pid in pid_tree(proc.pid):
         os.kill(pid, signal.SIGKILL)

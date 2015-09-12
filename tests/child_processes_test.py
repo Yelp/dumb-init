@@ -26,7 +26,7 @@ def spawn_and_kill_pipeline():
 
 
 def living_pids(pids):
-    return {pid for pid in pids if is_alive(pid)}
+    return set(pid for pid in pids if is_alive(pid))
 
 
 def test_setsid_signals_entire_group(both_debug_modes):

@@ -4,8 +4,8 @@
 # dumb-init as PID1.
 #
 # We run it as the last step of the integration tests inside our Docker
-# containers. Since this test must run as PID 1, we don't use pytest and
-# instead write it in bash.
+# containers. Since dumb-init must run as PID 1, we don't use pytest and
+# instead write it in bash (which gets executed by PID1 dumb-init).
 
 bash -euxc "bash -euxc 'echo i am a zombie' &" &
 
