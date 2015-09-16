@@ -20,8 +20,11 @@ run_tests() {
         ./test-help-message "$dumb_init_bin"
     done
 
-    DUMB_INIT_SETSID=0 ./test-setsid "$dumb_init_bin" 4
-    DUMB_INIT_SETSID=1 ./test-setsid "$dumb_init_bin" 0
+    DUMB_INIT_SETSID=0 ./test-setsid "$dumb_init_bin" 4 'kill -TERM $pid'
+    DUMB_INIT_SETSID=1 ./test-setsid "$dumb_init_bin" 0 'kill -TERM $pid'
+
+    DUMB_INIT_SETSID=0 ./test-setsid "$dumb_init_bin" 4 'rm $readyfile'
+    DUMB_INIT_SETSID=1 ./test-setsid "$dumb_init_bin" 0 'rm $readyfile'
 }
 
 cd tests
@@ -32,3 +35,5 @@ run_tests
 echo "Running tests in debug mode."
 export DUMB_INIT_DEBUG=1
 run_tests
+
+echo 'Congratulations! All tests passed.'

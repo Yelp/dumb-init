@@ -68,6 +68,7 @@ class build_cexe(Command):
             objects = compiler.compile(
                 exe.sources,
                 output_dir=self.build_temp,
+                debug=True,
             )
             compiler.link_executable(
                 objects,
@@ -86,7 +87,7 @@ class build_cexe(Command):
 setup(
     name='dumb-init',
     description='Simple wrapper script which proxies signals to a child',
-    version='0.2.0',
+    version='0.3.0',
     author='Yelp',
     platforms='linux',
 

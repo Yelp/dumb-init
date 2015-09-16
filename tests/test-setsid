@@ -3,8 +3,11 @@
 # requested.
 dumb_init="$1"
 after_count="$2"
+test_cmd="$3"
 
-$dumb_init sh -c "yes 'oh, hi' | tail & yes error | tail >&2" &
+readyfile=$(mktemp)
+
+$dumb_init sh -c "yes 'oh, hi' | tail & yes error | tail >&2 & while [ -e $readyfile ]; do sleep .01; done " &
 pid="$!"
 
 sleep 1
@@ -20,7 +23,7 @@ if [ "$child_count" -ne 6 ]; then
 fi
 
 # ensure processes are dead after signal
-kill -TERM "$pid"
+eval "$test_cmd"
 sleep 1
 child_count=$(ps -o pid= $pids | wc -l) || true
 
