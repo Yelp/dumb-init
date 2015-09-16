@@ -1,3 +1,9 @@
+dumb-init (0.3.0) unstable; urgency=low
+
+  * send SIGTERM to process group on subprocess exit
+
+ -- Kent Wills <rkwills@yelp.com>  Wed, 16 Sep 2015 16:14:25 -0700
+
 dumb-init (0.2.0) unstable; urgency=low
 
   * Use setsid for process-group behavior. This fixes tty interaction.

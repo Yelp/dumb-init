@@ -58,7 +58,9 @@ void reap_zombies(int signum) {
         DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
 
         if (killed_pid == child_pid) {
-            DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
+            DEBUG("Child exited with status %d. Cleaning up its process group...\n", exit_status);
+            signal_handler(SIGTERM);
+            DEBUG("Goodbye.\n");
             exit(exit_status);
         }
     }
