@@ -1,10 +1,13 @@
-#!/usr/bin/env python
+import os
+
+
 EOF = b'\x04'
 
 
 def ttyflags(fd):
     """normalize tty i/o for testing"""
-    # see: http://www.gnu.org/software/libc/manual/html_mono/libc.html#Output-Modes
+    # see:
+    # http://www.gnu.org/software/libc/manual/html_mono/libc.html#Output-Modes
     import termios as T
     attrs = T.tcgetattr(fd)
     attrs[1] &= ~T.OPOST  # don't munge output
@@ -12,13 +15,13 @@ def ttyflags(fd):
     T.tcsetattr(fd, T.TCSANOW, attrs)
 
 
-def tac(dumb_init):
+def tac():
     """
     run tac. if it fails to complete in 1 second send SIGKILL and exit with an
     error.
     """
     from os import execvp
-    execvp('timeout', ('timeout', '1', dumb_init, 'tac'))
+    execvp('timeout', ('timeout', '1', 'dumb-init', 'tac'))
 
 
 def readall(fd):
@@ -39,7 +42,7 @@ def readall(fd):
             result += chunk
 
 
-def test(fd):
+def _test(fd):
     """write to tac via the pty and verify its output"""
     ttyflags(fd)
     from os import write
@@ -50,23 +53,15 @@ def test(fd):
     print('PASS')
 
 
-def test_tty(dumb_init):
+def test_tty():
     """
     Ensure processes wrapped by dumb-init can write successfully, given a tty
     """
+    # disable debug output so it doesn't break our assertion
+    os.environ['DUMB_INIT_DEBUG'] = '0'
     import pty
     pid, fd = pty.fork()
     if pid == 0:
-        tac(dumb_init)
+        tac()
     else:
-        test(fd)
-
-
-def main():
-    from os import environ
-    environ['DUMB_INIT_DEBUG'] = '0'  # disable debug output so it doesn't break our assertion
-    from sys import argv
-    test_tty(argv[1])
-
-
-main()
+        _test(fd)

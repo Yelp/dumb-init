@@ -1,6 +1,6 @@
 CFLAGS=-std=gnu99 -static -Wall -Werror
 
-TEST_PACKAGE_DEPS := python procps psmisc libpcre3
+TEST_PACKAGE_DEPS := python python-pip
 
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 DOCKER_DEB_TEST := sh -euxc ' \
@@ -8,8 +8,11 @@ DOCKER_DEB_TEST := sh -euxc ' \
 	&& apt-get install -y --no-install-recommends $(TEST_PACKAGE_DEPS) \
 	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& dpkg -i /mnt/dist/*.deb \
-	&& cd /mnt \
-	&& ./test \
+	&& tmp=$$(mktemp -d) \
+	&& cp -r /mnt/* "$$tmp" \
+	&& cd "$$tmp" \
+	&& pip install pytest \
+	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
 DOCKER_PYTHON_TEST := sh -uexc ' \
@@ -22,7 +25,8 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 	&& python setup.py clean \
 	&& python setup.py sdist \
 	&& pip install -vv dist/*.tar.gz \
-	&& ./test \
+	&& pip install pytest \
+	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
 
