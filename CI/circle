@@ -14,7 +14,6 @@ GREEN = '\033[92m'
 YELLOW = '\033[33m'
 RESET = '\033[0m'
 
-NUM_WORKERS = 4
 TARGETS = [
     'itest_lucid',
     'itest_precise',
@@ -23,7 +22,6 @@ TARGETS = [
     'itest_jessie',
     'itest_stretch',
 ]
-TARGETS_PER_WORKER = int(ceil(len(TARGETS) / NUM_WORKERS))
 
 
 def log(line, color=''):
@@ -31,10 +29,11 @@ def log(line, color=''):
 
 
 if __name__ == '__main__':
+    num_workers = int(os.environ['CIRCLE_NODE_TOTAL'])
     node_index = int(os.environ['CIRCLE_NODE_INDEX'])
-    assert node_index < NUM_WORKERS
+    assert node_index < num_workers
 
-    my_targets = TARGETS[node_index::NUM_WORKERS]
+    my_targets = TARGETS[node_index::num_workers]
     status = 0
 
     for target in my_targets:
