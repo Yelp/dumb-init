@@ -6,6 +6,7 @@ SIGKILL (kill -9) to this process to actually end it.
 """
 from __future__ import print_function
 
+import os
 import signal
 import sys
 import time
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     for signum in CATCHABLE_SIGNALS:
         signal.signal(signum, print_signal)
 
-    unbuffered_print('ready')
+    unbuffered_print('ready (pid: {0})'.format(os.getpid()))
 
     # loop forever just printing signals
     while True:

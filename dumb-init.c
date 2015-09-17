@@ -28,40 +28,18 @@ pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
 
-void signal_handler(int signum) {
-    DEBUG("Received signal %d.\n", signum);
-
+void forward_signal(int signum) {
     if (child_pid > 0) {
         kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal to child.\n");
+        DEBUG("Forwarded signal %d to child.\n", signum);
     } else {
-        DEBUG("Didn't forward signal, no child exists yet.");
+        DEBUG("Didn't forward signal %d, no child exists yet.\n", signum);
     }
 }
 
-void reap_zombies(int signum) {
-    /*
-     * As PID 1, dumb-init is expected to handle reaping of zombie processes.
-     *
-     * If a process's parent exits, the child is orphaned and its new parent is
-     * PID 1. If that child later exits, it becomes a zombie process until its
-     * parent (now dumb-init) calls wait() on it.
-     */
-    int status, exit_status;
-    pid_t killed_pid;
-
-    assert(signum == SIGCHLD);
-    DEBUG("Received SIGCHLD, calling waitpid().\n");
-
-    while ((killed_pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        exit_status = WEXITSTATUS(status);
-        DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
-
-        if (killed_pid == child_pid) {
-            DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
-            exit(exit_status);
-        }
-    }
+void handle_signal(int signum) {
+    DEBUG("Received signal %d.\n", signum);
+    forward_signal(signum);
 }
 
 void print_help(char *argv[]) {
@@ -120,13 +98,11 @@ int main(int argc, char *argv[]) {
         if (signum == SIGKILL || signum == SIGSTOP || signum == SIGCHLD)
             continue;
 
-        if (signal(signum, signal_handler) == SIG_ERR) {
+        if (signal(signum, handle_signal) == SIG_ERR) {
             fprintf(stderr, "Error: Couldn't register signal handler for signal `%d`. Exiting.\n", signum);
             return 1;
         }
     }
-
-    signal(SIGCHLD, reap_zombies);
 
     /* launch our process */
     child_pid = fork();
@@ -153,9 +129,22 @@ int main(int argc, char *argv[]) {
 
         execvp(argv[1], &argv[1]);
     } else {
+        pid_t killed_pid;
+        int exit_status, status;
+
         DEBUG("Child spawned with PID %d.\n", child_pid);
-        for (;;) {
-            pause();
+
+        while ((killed_pid = waitpid(-1, &status, 0))) {
+            exit_status = WEXITSTATUS(status);
+            DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
+
+            if (killed_pid == child_pid) {
+                // send SIGTERM to any remaining children
+                forward_signal(SIGTERM);
+
+                DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
+                exit(exit_status);
+            }
         }
     }
 

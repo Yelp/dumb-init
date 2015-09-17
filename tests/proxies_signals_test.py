@@ -1,4 +1,5 @@
 import os
+import re
 import signal
 import sys
 from subprocess import PIPE
@@ -14,7 +15,7 @@ def test_prints_signals(both_debug_modes, both_setsid_modes):
         stdout=PIPE,
     )
 
-    assert proc.stdout.readline() == b'ready\n'
+    assert re.match(b'^ready \(pid: (?:[0-9]+)\)\n$', proc.stdout.readline())
 
     for signum in CATCHABLE_SIGNALS:
         proc.send_signal(signum)
