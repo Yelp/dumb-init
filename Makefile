@@ -1,4 +1,4 @@
-CFLAGS=-std=gnu99 -static -Wall -Werror
+CFLAGS=-std=gnu99 -static -Wall -Werror -O3
 
 TEST_PACKAGE_DEPS := python python-pip
 
