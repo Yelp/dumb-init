@@ -38,6 +38,7 @@ class install_cexe(Command):
             'install', ('install_scripts', 'install_dir'))
 
     def run(self):
+
         self.outfiles = self.copy_tree(self.build_dir, self.install_dir)
 
     def get_outputs(self):
@@ -86,7 +87,7 @@ class build_cexe(Command):
 setup(
     name='dumb-init',
     description='Simple wrapper script which proxies signals to a child',
-    version='0.2.0',
+    version='0.3.0',
     author='Yelp',
     platforms='linux',
 

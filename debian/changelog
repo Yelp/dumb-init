@@ -1,3 +1,10 @@
+dumb-init (0.3.0) unstable; urgency=low
+
+  * Send TERM to all processes in the session when the primary child dies when
+    running in setsid mode.
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Fri, 18 Sep 2015 11:08:05 -0700
+
 dumb-init (0.2.0) unstable; urgency=low
 
   * Use setsid for process-group behavior. This fixes tty interaction.
