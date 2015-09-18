@@ -1,6 +1,3 @@
-import os
-
-
 EOF = b'\x04'
 
 
@@ -53,12 +50,11 @@ def _test(fd):
     print('PASS')
 
 
-def test_tty():
+# disable debug output so it doesn't break our assertion
+def test_tty(debug_disabled):
     """
     Ensure processes wrapped by dumb-init can write successfully, given a tty
     """
-    # disable debug output so it doesn't break our assertion
-    os.environ['DUMB_INIT_DEBUG'] = '0'
     import pty
     pid, fd = pty.fork()
     if pid == 0:
