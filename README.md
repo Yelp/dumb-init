@@ -93,7 +93,7 @@ If you don't have an internal apt server, you can use `dpkg -i` to install the
 One possibility is with the following commands in your Dockerfile:
 
 ```bash
-RUN wget https://github.com/Yelp/dumb-init/releases/download/v0.1.0/dumb-init_0.1.0_amd64.deb
+RUN wget https://github.com/Yelp/dumb-init/releases/download/v0.3.0/dumb-init_0.3.0_amd64.deb
 RUN dpkg -i dumb-init_*.deb
 ```
 
