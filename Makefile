@@ -2,11 +2,12 @@ CFLAGS=-std=gnu99 -static -Wall -Werror -O3
 
 TEST_PACKAGE_DEPS := python python-pip
 
-DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
+DOCKER_RUN_TEST := docker run -ti -v $(PWD):/mnt:ro
+
+# test installation using Debian packages
 DOCKER_DEB_TEST := sh -euxc ' \
 	apt-get update \
 	&& apt-get install -y --no-install-recommends $(TEST_PACKAGE_DEPS) \
-	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& dpkg -i /mnt/dist/*.deb \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
@@ -15,10 +16,11 @@ DOCKER_DEB_TEST := sh -euxc ' \
 	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
+
+# test installation using `pip install`
 DOCKER_PYTHON_TEST := sh -uexc ' \
 	apt-get update \
 	&& apt-get install -y --no-install-recommends python-pip build-essential $(TEST_PACKAGE_DEPS) \
-	&& (which timeout || apt-get install -y --no-install-recommends timeout) \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
 	&& cd "$$tmp" \
@@ -30,6 +32,17 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
 
+# test several Python versions using tox
+DOCKER_TOX_TEST := sh -uexc ' \
+	apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0x5BB92C09DB82666C \
+	&& echo "deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu trusty main" >> /etc/apt/sources.list \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends python2.6 python2.7 python3.4 python-tox build-essential git $(TEST_PACKAGE_DEPS) \
+	&& tmp=$$(mktemp -du) \
+	&& cp -r /mnt "$$tmp" \
+	&& cd "$$tmp" \
+	&& tox \
+'
 .PHONY: build
 build:
 	$(CC) $(CFLAGS) -o dumb-init dumb-init.c
@@ -73,6 +86,9 @@ itest_trusty: _itest-ubuntu-trusty
 itest_wheezy: _itest-debian-wheezy
 itest_jessie: _itest-debian-jessie
 itest_stretch: _itest-debian-stretch
+
+itest_tox:
+	$(DOCKER_RUN_TEST) ubuntu:trusty $(DOCKER_TOX_TEST)
 
 _itest-%: _itest_deb-% _itest_python-%
 	@true

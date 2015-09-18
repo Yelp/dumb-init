@@ -12,15 +12,6 @@ def ttyflags(fd):
     T.tcsetattr(fd, T.TCSANOW, attrs)
 
 
-def tac():
-    """
-    run tac. if it fails to complete in 1 second send SIGKILL and exit with an
-    error.
-    """
-    from os import execvp
-    execvp('timeout', ('timeout', '1', 'dumb-init', 'tac'))
-
-
 def readall(fd):
     """read until EOF"""
     from os import read
@@ -58,6 +49,7 @@ def test_tty(debug_disabled):
     import pty
     pid, fd = pty.fork()
     if pid == 0:
-        tac()
+        from os import execvp
+        execvp('dumb-init', ('dumb-init', 'tac'))
     else:
         _test(fd)

@@ -21,6 +21,7 @@ TARGETS = [
     'itest_wheezy',
     'itest_jessie',
     'itest_stretch',
+    'itest_tox',
 ]
 
 
