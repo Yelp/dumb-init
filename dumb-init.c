@@ -37,9 +37,60 @@ void forward_signal(int signum) {
     }
 }
 
+/*
+ * The dumb-init signal handler.
+ *
+ * The main job of this signal handler is to forward signals along to our child
+ * process(es). In setsid mode, this means signaling the entire process group
+ * rooted at our child. In non-setsid mode, this is just signaling the primary
+ * child.
+ *
+ * In most cases, simply proxying the received signal is sufficient. If we
+ * receive a job control signal, however, we should not only forward it, but
+ * also sleep dumb-init itself.
+ *
+ * This allows users to run foreground processes using dumb-init and to
+ * control them using normal shell job control features (e.g. Ctrl-Z to
+ * generate a SIGTSTP and suspend the process).
+ *
+ * The libc manual is useful:
+ * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
+ *
+ * When running in setsid mode, however, it is not sufficient to forward
+ * SIGTSTP/SIGTTIN/SIGTTOU in most cases. If the process has not added a custom
+ * signal handler for these signals, then the kernel will not apply default
+ * signal handling behavior (which would be suspending the process) since it is
+ * a member of an orphaned process group.
+ *
+ * Sadly this doesn't appear to be well documented except in the kernel itself:
+ * https://github.com/torvalds/linux/blob/v4.2/kernel/signal.c#L2296-L2299
+ *
+ * Forwarding SIGSTOP instead is effective, though not ideal; unlike SIGTSTP,
+ * SIGSTOP cannot be caught, and so it doesn't allow processes a change to
+ * clean up before suspending. In non-setsid mode, we proxy the original signal
+ * instead of SIGSTOP for this reason.
+*/
 void handle_signal(int signum) {
     DEBUG("Received signal %d.\n", signum);
-    forward_signal(signum);
+
+    if (
+        signum == SIGTSTP || // tty: background yourself
+        signum == SIGTTIN || // tty: stop reading
+        signum == SIGTTOU    // tty: stop writing
+    ) {
+        if (use_setsid) {
+            DEBUG("Running in setsid mode, so forwarding SIGSTOP instead.\n");
+            forward_signal(SIGSTOP);
+        } else {
+            DEBUG("Not running in setsid mode, so forwarding the original signal (%d).\n", signum);
+            forward_signal(signum);
+        }
+
+        DEBUG("Suspending self due to TTY signal.\n");
+        kill(getpid(), SIGSTOP);
+    } else {
+        forward_signal(signum);
+    }
 }
 
 void print_help(char *argv[]) {
