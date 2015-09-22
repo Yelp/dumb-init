@@ -26,11 +26,11 @@
 
 pid_t child_pid = -1;
 char debug = 0;
-char use_setsid = 1;
+char use_pgroup = 1;
 
 void forward_signal(int signum) {
     if (child_pid > 0) {
-        kill(use_setsid ? -child_pid : child_pid, signum);
+        kill(use_pgroup ? -child_pid : child_pid, signum);
         DEBUG("Forwarded signal %d to child.\n", signum);
     } else {
         DEBUG("Didn't forward signal %d, no child exists yet.\n", signum);
@@ -65,16 +65,16 @@ void print_help(char *argv[]) {
         "weird things (this is basically a requirement for doing things sanely in\n"
         "Docker anyway).\n"
         "\n"
-        "By default, dumb-init starts a process group (and session, see: man 2 setsid)\n"
-        "and signals all processes in it. This is usually useful behavior, but if for\n"
-        "some reason you wish to disable it, run with DUMB_INIT_SETSID=0.\n",
+        "By default, dumb-init starts a process group and signals all processes in it.\n"
+        "This is usually useful behavior, but if for some reason you wish to disable\n"
+        "it, run with DUMB_INIT_PGROUP=0.\n",
         argv[0]
     );
 }
 
 int main(int argc, char *argv[]) {
     int signum;
-    char *debug_env, *setsid_env;
+    char *debug_env, *pgroup_env;
 
     if (argc < 2) {
         print_help(argv);
@@ -87,10 +87,10 @@ int main(int argc, char *argv[]) {
         DEBUG("Running in debug mode.\n");
     }
 
-    setsid_env = getenv("DUMB_INIT_SETSID");
-    if (setsid_env && strcmp(setsid_env, "0") == 0) {
-        use_setsid = 0;
-        DEBUG("Not running in setsid mode.\n");
+    pgroup_env = getenv("DUMB_INIT_PGROUP");
+    if (pgroup_env && strcmp(pgroup_env, "0") == 0) {
+        use_pgroup = 0;
+        DEBUG("Not running in pgroup mode.\n");
     }
 
     /* register signal handlers */
@@ -113,18 +113,18 @@ int main(int argc, char *argv[]) {
     }
 
     if (child_pid == 0) {
-        if (use_setsid) {
-            pid_t result = setsid();
-            if (result == -1) {
+        if (use_pgroup) {
+            int result = setpgid(0, 0);
+            if (result != 0) {
                 fprintf(
                     stderr,
-                    "Unable to setsid (errno=%d %s). Exiting.\n",
+                    "Unable to setpgid (errno=%d %s). Exiting.\n",
                     errno,
                     strerror(errno)
                 );
                 exit(1);
             }
-            DEBUG("setsid complete.\n");
+            DEBUG("setpgid complete.\n");
         }
 
         execvp(argv[1], &argv[1]);

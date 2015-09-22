@@ -2,7 +2,7 @@ from subprocess import PIPE
 from subprocess import Popen
 
 
-def test_exit_status(both_debug_modes, both_setsid_modes):
+def test_exit_status(both_debug_modes, both_pgroup_modes):
     """dumb-init should say something useful when called with no arguments, and
     exit nonzero.
     """
