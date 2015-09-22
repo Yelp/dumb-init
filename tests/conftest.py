@@ -3,6 +3,13 @@ import os
 import pytest
 
 
+@pytest.fixture(autouse=True, scope='function')
+def clean_environment():
+    """Ensure tests don't pollute each others' environment variables."""
+    os.environ.pop('DUMB_INIT_DEBUG', None)
+    os.environ.pop('DUMB_INIT_SETSID', None)
+
+
 @pytest.fixture(params=['1', '0'])
 def both_debug_modes(request):
     os.environ['DUMB_INIT_DEBUG'] = request.param
