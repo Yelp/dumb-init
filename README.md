@@ -44,9 +44,8 @@ behave as you would expect. If your process dies, `dumb-init` will also die.
 
 ### Process group behavior
 
-In its default mode, `dumb-init` establishes a process group (and "session",
-via [setsid(2)](http://man7.org/linux/man-pages/man2/setsid.2.html)) rooted at
-the child, and sends signals to the entire process group. This is useful if you
+In its default mode, `dumb-init` establishes a process group rooted at the
+child, and sends signals to the entire process group. This is useful if you
 have a poorly-behaving child (such as a shell script) which won't normally
 signal its children before dying.
 

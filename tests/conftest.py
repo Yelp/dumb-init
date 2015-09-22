@@ -14,15 +14,15 @@ def debug_disabled():
 
 
 @pytest.fixture(params=['1', '0'])
-def both_setsid_modes(request):
-    os.environ['DUMB_INIT_SETSID'] = request.param
+def both_pgroup_modes(request):
+    os.environ['DUMB_INIT_PGROUP'] = request.param
 
 
 @pytest.fixture
-def setsid_enabled():
-    os.environ['DUMB_INIT_SETSID'] = '1'
+def pgroup_enabled():
+    os.environ['DUMB_INIT_PGROUP'] = '1'
 
 
 @pytest.fixture
-def setsid_disabled():
-    os.environ['DUMB_INIT_SETSID'] = '0'
+def pgroup_disabled():
+    os.environ['DUMB_INIT_PGROUP'] = '0'

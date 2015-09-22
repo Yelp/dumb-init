@@ -32,19 +32,19 @@ def living_pids(pids):
     return set(pid for pid in pids if is_alive(pid))
 
 
-def test_setsid_signals_entire_group(both_debug_modes, setsid_enabled):
-    """When dumb-init is running in setsid mode, it should only signal the
+def test_pgroup_signals_entire_group(both_debug_modes, pgroup_enabled):
+    """When dumb-init is running in pgroup mode, it should only signal the
     entire process group rooted at it.
     """
     pids = spawn_and_kill_pipeline()
     assert len(living_pids(pids)) == 0
 
 
-def test_no_setsid_doesnt_signal_entire_group(
+def test_no_pgroup_doesnt_signal_entire_group(
         both_debug_modes,
-        setsid_disabled,
+        pgroup_disabled,
 ):
-    """When dumb-init is not running in setsid mode, it should only signal its
+    """When dumb-init is not running in pgroup mode, it should only signal its
     immediate child.
     """
     pids = spawn_and_kill_pipeline()
@@ -89,17 +89,17 @@ def spawn_process_which_dies_with_children():
 
     # at this point, the shell and dumb-init have both exited, but
     # print_signals may or may not still be running (depending on whether
-    # setsid mode is enabled)
+    # pgroup mode is enabled)
 
     return child_pid, proc.stdout
 
 
-def test_all_processes_receive_term_on_exit_if_setsid(
+def test_all_processes_receive_term_on_exit_if_pgroup(
         both_debug_modes,
-        setsid_enabled,
+        pgroup_enabled,
 ):
     """If the child exits for some reason, dumb-init should send TERM to all
-    processes in its session if setsid mode is enabled."""
+    processes in its process group if pgroup mode is enabled."""
     child_pid, child_stdout = spawn_process_which_dies_with_children()
 
     # print_signals should have received TERM
@@ -108,12 +108,12 @@ def test_all_processes_receive_term_on_exit_if_setsid(
     os.kill(child_pid, signal.SIGKILL)
 
 
-def test_processes_dont_receive_term_on_exit_if_no_setsid(
+def test_processes_dont_receive_term_on_exit_if_no_pgroup(
         both_debug_modes,
-        setsid_disabled,
+        pgroup_disabled,
 ):
     """If the child exits for some reason, dumb-init should not send TERM to
-    any other processes if setsid mode is disabled."""
+    any other processes if pgroup mode is disabled."""
     child_pid, child_stdout = spawn_process_which_dies_with_children()
 
     # print_signals should not have received TERM; to test this, we send it
