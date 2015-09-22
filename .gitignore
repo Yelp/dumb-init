@@ -4,6 +4,6 @@ dist/
 *.egg-info
 .tox
 build/
-
 __pycache__/
 *.py[cod]
+.cache
