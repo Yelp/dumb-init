@@ -1,3 +1,4 @@
+mock
 pre-commit>=0.5.0
 pytest
 pytest-timeout

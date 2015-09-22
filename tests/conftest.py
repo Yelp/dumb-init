@@ -1,35 +1,48 @@
 import os
 
+import mock
 import pytest
 
 
-@pytest.fixture(autouse=True, scope='function')
+@pytest.yield_fixture(autouse=True, scope='function')
 def clean_environment():
-    """Ensure tests don't pollute each others' environment variables."""
-    os.environ.pop('DUMB_INIT_DEBUG', None)
-    os.environ.pop('DUMB_INIT_SETSID', None)
+    """Ensure all tests start with a clean environment.
+
+    Even if tests properly clean up after themselves, we still need this in
+    case the user runs tests with an already-polluted environment.
+    """
+    with mock.patch.dict(
+        os.environ,
+        {'DUMB_INIT_DEBUG': '', 'DUMB_INIT_SETSID': ''},
+    ):
+        yield
 
 
-@pytest.fixture(params=['1', '0'])
+@pytest.yield_fixture(params=['1', '0'])
 def both_debug_modes(request):
-    os.environ['DUMB_INIT_DEBUG'] = request.param
+    with mock.patch.dict(os.environ, {'DUMB_INIT_DEBUG': request.param}):
+        yield
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def debug_disabled():
-    os.environ['DUMB_INIT_DEBUG'] = '0'
+    with mock.patch.dict(os.environ, {'DUMB_INIT_DEBUG': '0'}):
+        yield
 
 
-@pytest.fixture(params=['1', '0'])
+@pytest.yield_fixture(params=['1', '0'])
 def both_setsid_modes(request):
-    os.environ['DUMB_INIT_SETSID'] = request.param
+    with mock.patch.dict(os.environ, {'DUMB_INIT_SETSID': request.param}):
+        yield
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def setsid_enabled():
-    os.environ['DUMB_INIT_SETSID'] = '1'
+    with mock.patch.dict(os.environ, {'DUMB_INIT_SETSID': '1'}):
+        yield
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def setsid_disabled():
-    os.environ['DUMB_INIT_SETSID'] = '0'
+    with mock.patch.dict(os.environ, {'DUMB_INIT_SETSID': '0'}):
+        yield
