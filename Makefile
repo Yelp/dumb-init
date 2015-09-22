@@ -12,7 +12,9 @@ DOCKER_DEB_TEST := sh -euxc ' \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
 	&& cd "$$tmp" \
-	&& pip install pytest \
+	&& pip install --upgrade pip \
+	&& /usr/local/bin/pip install --upgrade setuptools distribute \
+	&& /usr/local/bin/pip install -r requirements-dev.txt \
 	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
@@ -26,8 +28,10 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 	&& cd "$$tmp" \
 	&& python setup.py clean \
 	&& python setup.py sdist \
-	&& pip install -vv dist/*.tar.gz \
-	&& pip install pytest \
+	&& pip install --upgrade pip \
+	&& /usr/local/bin/pip install --upgrade setuptools distribute \
+	&& /usr/local/bin/pip install -vv dist/*.tar.gz \
+	&& /usr/local/bin/pip install -r requirements-dev.txt \
 	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
