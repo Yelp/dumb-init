@@ -10,10 +10,13 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -72,7 +75,7 @@ void print_help(char *argv[]) {
 }
 
 
-void register_signal_handlers_for_pid(pid_t pid) {
+void register_signal_handlers_for(pid_t pid) {
     forward_signals_to = pid;
     for (int signum = 1; signum < 32; signum++) {
         if (signum == SIGKILL || signum == SIGSTOP || signum == SIGCHLD)
@@ -101,6 +104,18 @@ void reap_children_forever_until_pid(pid_t target_pid) {
             DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
             exit(exit_status);
         }
+    }
+}
+
+
+void drop_controlling_tty(void) {
+    int fd = open("/dev/tty", O_RDWR);
+    if (fd >= 0) {
+        ioctl(fd, TIOCNOTTY);
+        close(fd);
+        DEBUG("Dropped our controlling TTY.\n");
+    } else {
+        DEBUG("Unable to open /dev/tty, assuming we had no controlling TTY.\n");
     }
 }
 
@@ -135,34 +150,38 @@ int main(int argc, char *argv[]) {
          *   - The child must not be in a new process group but still have a
          *     controlling terminal, or it will recevive SIGTTOU when it tries
          *     to print.
+         *
+         *  To achieve this, we fork off another dumb-init process (called the
+         *  `slave`) which drops its controlling TTY and then spawns a child in
+         *  a new process group.
          */
         pid_t slave_pid = fork();
         if (slave_pid < 0) {
             fprintf(stderr, "Unable to fork for slave. Exiting.\n");
             return 1;
         } else if (slave_pid == 0) {
-            if (setsid() == -1) {
-                fprintf(stderr, "Unable to setsid (errno=%d %s).\n", errno, strerror(errno));
-                exit(1);
-            }
-            DEBUG("setsid complete.\n");
-
+            // slave process
+            drop_controlling_tty();
             pid_t child_pid = fork();
+
             if (child_pid < 0) {
                 fprintf(stderr, "Unable to fork for child. Exiting.\n");
                 return 1;
             } else if (child_pid == 0) {
+                // child process, exec after establishing pgroup
                 if (setpgid(0, 0) != 0) {
                     fprintf(stderr, "Unable to setpgid (errno=%d %s).\n", errno, strerror(errno));
                     exit(1);
                 }
                 execvp(argv[1], &argv[1]);
             } else {
+                // slave process, register signal handlers and wait() repeatedly
                 DEBUG("Child spawned with PID %d.\n", child_pid);
                 register_signal_handlers_for(-child_pid);
                 reap_children_forever_until_pid(child_pid);
             }
         } else {
+            // master process
             register_signal_handlers_for(slave_pid);
             reap_children_forever_until_pid(slave_pid);
         }
