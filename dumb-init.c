@@ -24,23 +24,22 @@
     } \
 } while (0)
 
-pid_t child_pid = -1;
+pid_t forward_signals_to = -1;
 char debug = 0;
 char use_setsid = 1;
 
+
 void forward_signal(int signum) {
-    if (child_pid > 0) {
-        kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to child.\n", signum);
-    } else {
-        DEBUG("Didn't forward signal %d, no child exists yet.\n", signum);
-    }
+    kill(forward_signals_to, signum);
+    DEBUG("Forwarded signal %d to PID %d.\n", signum, forward_signals_to);
 }
+
 
 void handle_signal(int signum) {
     DEBUG("Received signal %d.\n", signum);
     forward_signal(signum);
 }
+
 
 void print_help(char *argv[]) {
     fprintf(stderr,
@@ -72,8 +71,41 @@ void print_help(char *argv[]) {
     );
 }
 
+
+void register_signal_handlers_for_pid(pid_t pid) {
+    forward_signals_to = pid;
+    for (int signum = 1; signum < 32; signum++) {
+        if (signum == SIGKILL || signum == SIGSTOP || signum == SIGCHLD)
+            continue;
+
+        if (signal(signum, handle_signal) == SIG_ERR) {
+            fprintf(stderr, "Error: Couldn't register signal handler for signal `%d`. Exiting.\n", signum);
+            exit(1);
+        }
+    }
+}
+
+
+void reap_children_forever_until_pid(pid_t target_pid) {
+    int status;
+    int exit_status;
+    pid_t killed_pid;
+    while ((killed_pid = waitpid(-1, &status, 0))) {
+        exit_status = WEXITSTATUS(status);
+        DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
+
+        if (killed_pid == target_pid) {
+            // send SIGTERM to any remaining children
+            forward_signal(SIGTERM);
+
+            DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
+            exit(exit_status);
+        }
+    }
+}
+
+
 int main(int argc, char *argv[]) {
-    int signum;
     char *debug_env, *setsid_env;
 
     if (argc < 2) {
@@ -93,60 +125,62 @@ int main(int argc, char *argv[]) {
         DEBUG("Not running in setsid mode.\n");
     }
 
-    /* register signal handlers */
-    for (signum = 1; signum < 32; signum++) {
-        if (signum == SIGKILL || signum == SIGSTOP || signum == SIGCHLD)
-            continue;
-
-        if (signal(signum, handle_signal) == SIG_ERR) {
-            fprintf(stderr, "Error: Couldn't register signal handler for signal `%d`. Exiting.\n", signum);
+    if (use_setsid) {
+        /*
+         * If running in setsid mode, we need to make sure of the following:
+         *
+         *   - The child must not be in an orphaned process group, because we
+         *     want it to handle signals like SIGTSTP correctly.
+         *
+         *   - The child must not be in a new process group but still have a
+         *     controlling terminal, or it will recevive SIGTTOU when it tries
+         *     to print.
+         */
+        pid_t slave_pid = fork();
+        if (slave_pid < 0) {
+            fprintf(stderr, "Unable to fork for slave. Exiting.\n");
             return 1;
-        }
-    }
-
-    /* launch our process */
-    child_pid = fork();
-
-    if (child_pid < 0) {
-        fprintf(stderr, "Unable to fork. Exiting.\n");
-        return 1;
-    }
-
-    if (child_pid == 0) {
-        if (use_setsid) {
-            pid_t result = setsid();
-            if (result == -1) {
-                fprintf(
-                    stderr,
-                    "Unable to setsid (errno=%d %s). Exiting.\n",
-                    errno,
-                    strerror(errno)
-                );
+        } else if (slave_pid == 0) {
+            if (setsid() == -1) {
+                fprintf(stderr, "Unable to setsid (errno=%d %s).\n", errno, strerror(errno));
                 exit(1);
             }
             DEBUG("setsid complete.\n");
-        }
 
-        execvp(argv[1], &argv[1]);
-    } else {
-        pid_t killed_pid;
-        int exit_status, status;
-
-        DEBUG("Child spawned with PID %d.\n", child_pid);
-
-        while ((killed_pid = waitpid(-1, &status, 0))) {
-            exit_status = WEXITSTATUS(status);
-            DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
-
-            if (killed_pid == child_pid) {
-                // send SIGTERM to any remaining children
-                forward_signal(SIGTERM);
-
-                DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
-                exit(exit_status);
+            pid_t child_pid = fork();
+            if (child_pid < 0) {
+                fprintf(stderr, "Unable to fork for child. Exiting.\n");
+                return 1;
+            } else if (child_pid == 0) {
+                if (setpgid(0, 0) != 0) {
+                    fprintf(stderr, "Unable to setpgid (errno=%d %s).\n", errno, strerror(errno));
+                    exit(1);
+                }
+                execvp(argv[1], &argv[1]);
+            } else {
+                DEBUG("Child spawned with PID %d.\n", child_pid);
+                register_signal_handlers_for(-child_pid);
+                reap_children_forever_until_pid(child_pid);
             }
+        } else {
+            register_signal_handlers_for(slave_pid);
+            reap_children_forever_until_pid(slave_pid);
+        }
+    } else {
+        /*
+         * If not running in setsid mode, simply spawn a single child and proxy
+         * signals to it directly.
+         */
+        pid_t child_pid = fork();
+        if (child_pid < 0) {
+            fprintf(stderr, "Unable to fork for child. Exiting.\n");
+            return 1;
+        } else if (child_pid == 0) {
+            execvp(argv[1], &argv[1]);
+        } else {
+            DEBUG("Child spawned with PID %d.\n", child_pid);
+            register_signal_handlers_for(child_pid);
+            reap_children_forever_until_pid(child_pid);
         }
     }
-
-    return 0;
 }

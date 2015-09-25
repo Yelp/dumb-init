@@ -69,6 +69,7 @@ class build_cexe(Command):
             objects = compiler.compile(
                 exe.sources,
                 output_dir=self.build_temp,
+                extra_postargs=exe.extra_compile_args,
             )
             compiler.link_executable(
                 objects,
@@ -95,6 +96,7 @@ setup(
         Extension(
             'dumb-init',
             ['dumb-init.c'],
+            extra_compile_args=['-std=gnu99'],
             extra_link_args=['-static'],
         ),
     ],
