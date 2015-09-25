@@ -19,7 +19,10 @@ def spawn_and_kill_pipeline():
     time.sleep(0.1)
 
     pids = pid_tree(os.getpid())
-    assert len(living_pids(pids)) == 6
+    if os.environ.get('DUMB_INIT_SETSID', '1') == '0':
+        assert len(living_pids(pids)) == 6
+    else:
+        assert len(living_pids(pids)) == 7
 
     proc.send_signal(signal.SIGTERM)
     proc.wait()
