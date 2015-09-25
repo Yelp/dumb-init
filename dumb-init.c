@@ -10,10 +10,13 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -24,14 +27,26 @@
     } \
 } while (0)
 
+void handle_signal(int signum);
+
+
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
 
 void forward_signal(int signum) {
     if (child_pid > 0) {
-        kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to child.\n", signum);
+        if (use_setsid) {
+            // flush signal queue and re-register the handler
+            kill(0, signum);
+            signal(signum, SIG_IGN);
+            signal(signum, handle_signal);
+
+            DEBUG("Forwarded signal %d to process group.\n", signum);
+        } else {
+            kill(child_pid, signum);
+            DEBUG("Forwarded signal %d to child.\n", signum);
+        }
     } else {
         DEBUG("Didn't forward signal %d, no child exists yet.\n", signum);
     }
@@ -84,7 +99,7 @@ int main(int argc, char *argv[]) {
     debug_env = getenv("DUMB_INIT_DEBUG");
     if (debug_env && strcmp(debug_env, "1") == 0) {
         debug = 1;
-        DEBUG("Running in debug mode.\n");
+        DEBUG("Running in debug mode with pid %d.\n", getpid());
     }
 
     setsid_env = getenv("DUMB_INIT_SETSID");
@@ -104,6 +119,48 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (use_setsid) {
+        /*
+         * In setsid mode, we need to ensure that we are the process group
+         * leader.
+         *
+         * If we are already the process group leader, then we are done.
+         *
+         * If we aren't, then we need to establish ourself as a new process
+         * group leader. This requires dropping our controlling TTY, as
+         * otherwise we will be considered backgrounded and attempts to print
+         * will raise SIGTTOU.
+         */
+        if (getpgrp() != getpid()) {
+            DEBUG("dumb-init is not already process group leader, starting a new pgroup.\n");
+
+            // establish new process group
+            pid_t result = setpgid(0, 0);
+            if (result != 0) {
+                fprintf(
+                    stderr,
+                    "Unable to create process group (errno=%d %s). Exiting.\n",
+                    errno,
+                    strerror(errno)
+                );
+                return 1;
+            }
+            DEBUG("Process group created.\n");
+
+            // drop our controlling tty, if we have one
+            int fd = open("/dev/tty", 0);
+            if (fd != -1) {
+                // we have a controlling tty, so drop it
+                ioctl(fd, TIOCNOTTY);
+                DEBUG("Dropped our controlling TTY.\n");
+            } else {
+                DEBUG("Unable to open /dev/tty, assuming we had no controlling TTY.\n");
+            }
+        } else {
+            DEBUG("dumb-init is already process group leader.\n");
+        }
+    }
+
     /* launch our process */
     child_pid = fork();
 
@@ -113,20 +170,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (child_pid == 0) {
-        if (use_setsid) {
-            pid_t result = setsid();
-            if (result == -1) {
-                fprintf(
-                    stderr,
-                    "Unable to setsid (errno=%d %s). Exiting.\n",
-                    errno,
-                    strerror(errno)
-                );
-                exit(1);
-            }
-            DEBUG("setsid complete.\n");
-        }
-
         execvp(argv[1], &argv[1]);
     } else {
         pid_t killed_pid;
