@@ -123,3 +123,14 @@ def test_processes_dont_receive_term_on_exit_if_no_setsid(
         assert child_stdout.readline() == str(signum).encode('ascii') + b'\n'
 
     os.kill(child_pid, signal.SIGKILL)
+
+
+def test_fails_nonzero_with_bad_exec(both_debug_modes, both_setsid_modes):
+    """If dumb-init can't exec as requested, it should exit nonzero."""
+    proc = Popen(('dumb-init', '/doesnotexist'), stderr=PIPE)
+    proc.wait()
+    assert proc.returncode != 0
+    assert (
+        b'dumb-init: /doesnotexist: No such file or directory\n'
+        in proc.stderr
+    )
