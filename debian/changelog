@@ -1,3 +1,9 @@
+dumb-init (0.3.1) unstable; urgency=medium
+
+  * Exit nonzero if exec() fails (such as trying to run a nonexistent process)
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Tue, 29 Sep 2015 11:18:12 -0700
+
 dumb-init (0.3.0) unstable; urgency=low
 
   * Send TERM to all processes in the session when the primary child dies when

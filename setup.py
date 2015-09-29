@@ -87,7 +87,7 @@ class build_cexe(Command):
 setup(
     name='dumb-init',
     description='Simple wrapper script which proxies signals to a child',
-    version='0.3.0',
+    version='0.3.1',
     author='Yelp',
     platforms='linux',
 
