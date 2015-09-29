@@ -128,6 +128,16 @@ int main(int argc, char *argv[]) {
         }
 
         execvp(argv[1], &argv[1]);
+
+        // if this point is reached, exec failed, so we should exit nonzero
+        fprintf(
+            stderr,
+            "Failed to launch process '%s' (errno %d: %s)\n",
+            argv[1],
+            errno,
+            strerror(errno)
+        );
+        exit(2);
     } else {
         pid_t killed_pid;
         int exit_status, status;
