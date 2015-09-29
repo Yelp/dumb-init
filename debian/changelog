@@ -1,3 +1,12 @@
+dumb-init (0.4.0) unstable; urgency=medium
+
+  * Properly respond to job control signals (SIGTSTP, SIGTTIN, SIGTTOU).
+
+    This makes it possible to suspend dumb-init (and its child process) by
+    hitting ^Z in an interactive shell session.
+
+ -- Chris Kuehl <ckuehl@ocf.berkeley.edu>  Tue, 29 Sep 2015 13:45:06 -0700
+
 dumb-init (0.3.1) unstable; urgency=medium
 
   * Exit nonzero if exec() fails (such as trying to run a nonexistent process)
