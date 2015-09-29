@@ -131,6 +131,6 @@ def test_fails_nonzero_with_bad_exec(both_debug_modes, both_setsid_modes):
     proc.wait()
     assert proc.returncode != 0
     assert (
-        "Failed to launch process '/doesnotexist' (errno 2: No such file or directory)\n"
+        'dumb-init: /doesnotexist: No such file or directory\n'
         in proc.stderr
     )
