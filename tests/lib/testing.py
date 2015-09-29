@@ -1,10 +1,20 @@
+import re
 import signal
 
 from py._path.local import LocalPath
 
 
-CATCHABLE_SIGNALS = frozenset(
-    set(range(1, 32)) - set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD])
+# these signals cause dumb-init to suspend itself
+SUSPEND_SIGNALS = frozenset([
+    signal.SIGTSTP,
+    signal.SIGTTOU,
+    signal.SIGTTIN,
+])
+
+NORMAL_SIGNALS = frozenset(
+    set(range(1, 32))
+    - set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD])
+    - SUSPEND_SIGNALS
 )
 
 
@@ -32,3 +42,10 @@ def pid_tree(pid):
 def is_alive(pid):
     """Return whether a process is running with the given PID."""
     return LocalPath('/proc').join(str(pid)).isdir()
+
+
+def process_state(pid):
+    """Return a process' state, such as "stopped" or "running"."""
+    status = LocalPath('/proc').join(str(pid), 'status').read()
+    m = re.search('^State:\s+[A-Z] \(([a-z]+)\)$', status, re.MULTILINE)
+    return m.group(1)

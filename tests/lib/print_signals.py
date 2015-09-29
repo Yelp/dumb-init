@@ -11,10 +11,14 @@ import signal
 import sys
 import time
 
-from tests.lib.testing import CATCHABLE_SIGNALS
+
+CATCHABLE_SIGNALS = frozenset(
+    set(range(1, 32)) - set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD])
+)
 
 
 print_queue = []
+last_signal = None
 
 
 def unbuffered_print(line):
@@ -35,6 +39,12 @@ if __name__ == '__main__':
     # loop forever just printing signals
     while True:
         if print_queue:
-            unbuffered_print(print_queue.pop())
+            signum = print_queue.pop()
+            unbuffered_print(signum)
+
+            if signum == signal.SIGINT and last_signal == signal.SIGINT:
+                print('Received SIGINT twice, exiting.')
+                exit(0)
+            last_signal = signum
 
         time.sleep(0.01)
