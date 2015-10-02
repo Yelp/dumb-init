@@ -18,9 +18,13 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#define PRINTERR(...) do { \
+    fprintf(stderr, "[dumb-init] " __VA_ARGS__); \
+} while (0)
+
 #define DEBUG(...) do { \
     if (debug) { \
-        fprintf(stderr, __VA_ARGS__); \
+        PRINTERR(__VA_ARGS__); \
     } \
 } while (0)
 
@@ -31,9 +35,9 @@ char use_setsid = 1;
 void forward_signal(int signum) {
     if (child_pid > 0) {
         kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to child.\n", signum);
+        DEBUG("Forwarded signal %d to children.\n", signum);
     } else {
-        DEBUG("Didn't forward signal %d, no child exists yet.\n", signum);
+        DEBUG("Didn't forward signal %d, no children exists yet.\n", signum);
     }
 }
 
@@ -150,7 +154,7 @@ int main(int argc, char *argv[]) {
             continue;
 
         if (signal(signum, handle_signal) == SIG_ERR) {
-            fprintf(stderr, "Error: Couldn't register signal handler for signal `%d`. Exiting.\n", signum);
+            PRINTERR("Couldn't register signal handler for signal `%d`. Exiting.\n", signum);
             return 1;
         }
     }
@@ -159,7 +163,7 @@ int main(int argc, char *argv[]) {
     child_pid = fork();
 
     if (child_pid < 0) {
-        fprintf(stderr, "Unable to fork. Exiting.\n");
+        PRINTERR("Unable to fork. Exiting.\n");
         return 1;
     }
 
@@ -167,8 +171,7 @@ int main(int argc, char *argv[]) {
         if (use_setsid) {
             pid_t result = setsid();
             if (result == -1) {
-                fprintf(
-                    stderr,
+                PRINTERR(
                     "Unable to setsid (errno=%d %s). Exiting.\n",
                     errno,
                     strerror(errno)
@@ -181,12 +184,7 @@ int main(int argc, char *argv[]) {
         execvp(argv[1], &argv[1]);
 
         // if this point is reached, exec failed, so we should exit nonzero
-        fprintf(
-            stderr,
-            "dumb-init: %s: %s\n",
-            argv[1],
-            strerror(errno)
-        );
+        PRINTERR("%s: %s\n", argv[1], strerror(errno));
         exit(2);
     } else {
         pid_t killed_pid;
