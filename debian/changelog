@@ -1,3 +1,11 @@
+dumb-init (0.5.0) unstable; urgency=low
+
+  * Add command-line option parsing (supplements existing environment
+    variables).
+  * Prefix debug output with '[dumb-init]'
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Fri, 02 Oct 2015 18:12:51 -0700
+
 dumb-init (0.4.0) unstable; urgency=medium
 
   * Properly respond to job control signals (SIGTSTP, SIGTTIN, SIGTTOU).
