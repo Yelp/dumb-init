@@ -19,7 +19,8 @@ of that after merging!
 
 The process to release a new version is:
 
-1. Update the version in `setup.py`
+1. Update the version in `VERSION`
+2. Run `make VERSION.h`
 2. Update the Debian changelog with `dch -v {new version}`.
 3. Update the `wget` url in the README to point to the new version.
 4. Commit the changes and tag the commit like `v1.0.0`.

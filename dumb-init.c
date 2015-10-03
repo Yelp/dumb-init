@@ -5,11 +5,12 @@
  * Usage:
  *   ./dumb-init python -c 'while True: pass'
  *
- * To get debug output on stderr, run with DUMB_INIT_DEBUG=1
+ * To get debug output on stderr, run with '-v'.
  */
 
 #include <assert.h>
 #include <errno.h>
+#include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "VERSION.h"
 
 #define PRINTERR(...) do { \
     fprintf(stderr, "[dumb-init] " __VA_ARGS__); \
@@ -99,50 +101,72 @@ void handle_signal(int signum) {
 
 void print_help(char *argv[]) {
     fprintf(stderr,
-        "Usage: %s COMMAND [[ARG] ...]\n"
+        "dumb-init v%s"
+        "Usage: %s [option] command [[arg] ...]\n"
         "\n"
-        "dumb-init is a simple process designed to run as PID 1 inside Docker\n"
-        "containers and proxy signals to child processes.\n"
+        "dumb-init is a simple process supervisor that forwards signals to children.\n"
+        "It is designed to run as PID1 in minimal container environments.\n"
         "\n"
-        "Docker runs your processes as PID1. The kernel doesn't apply default signal\n"
-        "handling to PID1 processes, so if your process doesn't register a custom\n"
-        "signal handler, signals like TERM will just bounce off your process.\n"
+        "Optional arguments:\n"
+        "   -c, --single-child   Run in single-child mode.\n"
+        "                        In this mode, signals are only proxies to the\n"
+        "                        direct child and not any of its ancestors.\n"
+        "   -v, --verbose        Print debugging information to stderr.\n"
+        "   -h, --help           Print this help message and exit.\n"
+        "   -V, --version        Print the current version and exit.\n"
         "\n"
-        "This can result in cases where sending signals to a `docker run` process\n"
-        "results in the run process exiting, but the container continuing in the\n"
-        "background.\n"
-        "\n"
-        "A workaround is to wrap your script in this proxy, which runs as PID1. Your\n"
-        "process then runs as some other PID, and the kernel won't treat the signals\n"
-        "that are proxied to them specially.\n"
-        "\n"
-        "The proxy dies when your process dies, so it must not double-fork or do other\n"
-        "weird things (this is basically a requirement for doing things sanely in\n"
-        "Docker anyway).\n"
-        "\n"
-        "By default, dumb-init starts a process group (and session, see: man 2 setsid)\n"
-        "and signals all processes in it. This is usually useful behavior, but if for\n"
-        "some reason you wish to disable it, run with DUMB_INIT_SETSID=0.\n",
+        "Full help is available online at https://github.com/Yelp/dumb-init\n",
+        VERSION,
         argv[0]
     );
 }
 
 int main(int argc, char *argv[]) {
-    int signum;
-    char *debug_env, *setsid_env;
+    int signum, opt;
 
-    if (argc < 2) {
-        print_help(argv);
-        return 1;
+    struct option long_options[] = {
+        {"help",         no_argument, NULL, 'h'},
+        {"single-child", no_argument, NULL, 'c'},
+        {"verbose",      no_argument, NULL, 'v'},
+        {"version",      no_argument, NULL, 'V'},
+    };
+    while ((opt = getopt_long(argc, argv, "+hvVc", long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'h':
+                print_help(argv);
+                return 0;
+            case 'v':
+                debug = 1;
+                break;
+            case 'V':
+                fprintf(stderr, "dumb-init v%s", VERSION);
+                return 0;
+            case 'c':
+                use_setsid = 0;
+                break;
+            default:
+                return 1;
+        }
     }
 
-    debug_env = getenv("DUMB_INIT_DEBUG");
+    if (optind >= argc) {
+        fprintf(
+            stderr,
+            "Usage: %s [option] program [args]\n"
+            "Try %s --help for full usage.\n",
+            argv[0], argv[0]
+        );
+        return 1;
+    }
+    char **cmd = &argv[optind];
+
+    char *debug_env = getenv("DUMB_INIT_DEBUG");
     if (debug_env && strcmp(debug_env, "1") == 0) {
         debug = 1;
         DEBUG("Running in debug mode.\n");
     }
 
-    setsid_env = getenv("DUMB_INIT_SETSID");
+    char *setsid_env = getenv("DUMB_INIT_SETSID");
     if (setsid_env && strcmp(setsid_env, "0") == 0) {
         use_setsid = 0;
         DEBUG("Not running in setsid mode.\n");
@@ -181,7 +205,7 @@ int main(int argc, char *argv[]) {
             DEBUG("setsid complete.\n");
         }
 
-        execvp(argv[1], &argv[1]);
+        execvp(cmd[0], &cmd[0]);
 
         // if this point is reached, exec failed, so we should exit nonzero
         PRINTERR("%s: %s\n", argv[1], strerror(errno));

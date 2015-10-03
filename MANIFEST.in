@@ -1,1 +1,3 @@
 include dumb-init.c
+include VERSION
+include VERSION.h
