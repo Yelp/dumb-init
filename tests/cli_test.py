@@ -39,7 +39,7 @@ def test_help_message(flag, both_debug_modes, both_setsid_modes, current_version
         b'Optional arguments:\n'
         b'   -c, --single-child   Run in single-child mode.\n'
         b'                        In this mode, signals are only proxies to the\n'
-        b'                        direct child and not any of its ancestors.\n'
+        b'                        direct child and not any of its descendants.\n'
         b'   -v, --verbose        Print debugging information to stderr.\n'
         b'   -h, --help           Print this help message and exit.\n'
         b'   -V, --version        Print the current version and exit.\n'

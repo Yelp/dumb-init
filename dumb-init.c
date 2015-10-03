@@ -110,7 +110,7 @@ void print_help(char *argv[]) {
         "Optional arguments:\n"
         "   -c, --single-child   Run in single-child mode.\n"
         "                        In this mode, signals are only proxies to the\n"
-        "                        direct child and not any of its ancestors.\n"
+        "                        direct child and not any of its descendants.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
