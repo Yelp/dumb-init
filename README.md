@@ -168,3 +168,4 @@ more humane signals like `SIGTERM`.
 [gh-releases]: https://github.com/Yelp/dumb-init/releases
 [systemd]: https://wiki.freedesktop.org/www/Software/systemd/
 [sysvinit]: https://wiki.archlinux.org/index.php/SysVinit
+[docker]: https://www.docker.com/
