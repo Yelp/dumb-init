@@ -61,7 +61,7 @@ There are two common issues this presents:
    `wait()`-ing on orphaned zombie processes.
 
    Of course, most processes *won't* `wait()` on random processes that happen
-   to become attached to it, so containers often end with dozens of zombies
+   to become attached to them, so containers often end with dozens of zombies
    rooted at PID 1.
 
 
