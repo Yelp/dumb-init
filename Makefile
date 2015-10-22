@@ -2,7 +2,7 @@ CFLAGS=-std=gnu99 -static -Wall -Werror -O3
 
 TEST_PACKAGE_DEPS := python python-pip
 
-DOCKER_RUN_TEST := docker run -ti -v $(PWD):/mnt:ro
+DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 
 # test installation using Debian packages
 DOCKER_DEB_TEST := sh -euxc ' \
