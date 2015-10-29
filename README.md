@@ -80,7 +80,7 @@ taking care to clean up any other processes that might still remain.
 ### Session behavior
 
 In its default mode, `dumb-init` establishes a
-[session](http://man7.org/linux/man-pages/man2/setsid.2.html)) rooted at the
+[session](http://man7.org/linux/man-pages/man2/setsid.2.html) rooted at the
 child, and sends signals to the entire process group. This is useful if you
 have a poorly-behaving child (such as a shell script) which won't normally
 signal its children before dying.
