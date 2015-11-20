@@ -39,7 +39,7 @@ void forward_signal(int signum) {
         kill(use_setsid ? -child_pid : child_pid, signum);
         DEBUG("Forwarded signal %d to children.\n", signum);
     } else {
-        DEBUG("Didn't forward signal %d, no children exists yet.\n", signum);
+        DEBUG("Didn't forward signal %d, no children exist yet.\n", signum);
     }
 }
 
