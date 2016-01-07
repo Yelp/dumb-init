@@ -10,3 +10,6 @@ override_dh_auto_test:
 	find . -name '__pycache__' -delete
 	PATH=.:$$PATH py.test tests/
 	ps aux
+
+# we don't want it to wipe out our dist directory
+override_dh_auto_clean:
