@@ -64,14 +64,26 @@ clean: clean-tox
 clean-tox:
 	rm -rf .tox
 
+.PHONY: release
+release: builddeb-docker sdist
+	# extract the built binary from the Debian package
+	dpkg-deb --fsys-tarfile dist/dumb-init_$(shell cat VERSION)_amd64.deb | \
+		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
+	mv dist/dumb-init dist/dumb-init_$(shell cat VERSION)_amd64
+
+.PHONY: sdist
+sdist: VERSION.h
+	python setup.py sdist
+
 .PHONY: builddeb
 builddeb:
 	debuild --set-envvar=CC=musl-gcc -us -uc -b
-	rm -rf dist && mkdir dist
+	mkdir -p dist
 	mv ../dumb-init_*.deb dist/
 
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
+	mkdir -p dist
 	docker run -v $(PWD):/mnt dumb-init-build
 
 .PHONY: docker-image

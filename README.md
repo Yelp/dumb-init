@@ -135,7 +135,18 @@ RUN dpkg -i dumb-init_*.deb
 ```
 
 
-### Option 3: Installing from PyPI
+### Option 3: Downloading the binary directly
+
+Since dumb-init is released as a statically-linked binary, you can usually just
+plop it into your images. Here's an example of doing that in a Dockerfile:
+
+```bash
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v0.5.0/dumb-init_0.5.0_amd64
+RUN chmod +x /usr/local/bin/dumb-init
+```
+
+
+### Option 4: Installing from PyPI
 
 Though `dumb-init` is written entirely in C, we also provide a Python package
 which compiles and installs the binary. It can be installed [from
