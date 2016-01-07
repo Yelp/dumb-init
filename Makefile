@@ -1,4 +1,4 @@
-CFLAGS=-std=gnu99 -static -Wall -Werror -O3
+CFLAGS=-std=gnu99 -static -s -Wall -Werror -O3
 
 TEST_PACKAGE_DEPS := python python-pip
 
@@ -66,7 +66,7 @@ clean-tox:
 
 .PHONY: builddeb
 builddeb:
-	debuild -us -uc -b
+	debuild --set-envvar=CC=musl-gcc -us -uc -b
 	rm -rf dist && mkdir dist
 	mv ../dumb-init_*.deb dist/
 
