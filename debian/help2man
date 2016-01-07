@@ -1,0 +1,7 @@
+[authors]
+.B dumb-init
+was primarily developed at Yelp.
+.br
+.br
+For a full list of contributors, see
+https://github.com/Yelp/dumb-init/graphs/contributors

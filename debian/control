@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Chris Kuehl <ckuehl@yelp.com>
 Uploaders: Kent Wills <rkwills@yelp.com>
 Build-Depends: debhelper (>= 7), gcc, fakeroot, python, python-pytest,
- python-mock
+ python-mock, help2man
 Standards-Version: 3.9.6
 
 Package: dumb-init

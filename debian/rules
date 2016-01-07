@@ -2,6 +2,14 @@
 %:
 	dh $@
 
+override_dh_auto_build:
+	dh_auto_build $@
+	help2man --name 'a minimal init system for Linux containers' \
+		--no-discard-stderr \
+		--include debian/help2man \
+		--no-info \
+		./dumb-init > debian/dumb-init.man
+
 override_dh_builddeb:
 	dh_builddeb -- -Zgzip
 
