@@ -66,7 +66,7 @@ clean-tox:
 
 .PHONY: builddeb
 builddeb:
-	debuild -us -uc -b
+	debuild --set-envvar=CC=musl-gcc -us -uc -b
 	rm -rf dist && mkdir dist
 	mv ../dumb-init_*.deb dist/
 
