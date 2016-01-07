@@ -6,11 +6,12 @@
 # We run it as the last step of the integration tests inside our Docker
 # containers. Since dumb-init must run as PID 1, we don't use pytest and
 # instead write it in bash (which gets executed by PID1 dumb-init).
+set -o pipefail
 
 bash -euxc "bash -euxc 'echo i am a zombie' &" &
 
 sleep 1
-num_zombies=$(ps -A -o state | grep 'Z' | wc -l)
+num_zombies=$(ps -A -o state | (grep 'Z' || true) | wc -l)
 
 if [ "$num_zombies" -ne 0 ]; then
     echo "Expected no zombies, but instead there were ${num_zombies}."
