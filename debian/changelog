@@ -1,3 +1,12 @@
+dumb-init (1.0.0) unstable; urgency=low
+
+  * Compile dumb-init with musl and strip the binary of unnecessary symbols
+    (thanks Konrad Scherer)
+  * Fix some typos (thanks Anthony Sottile)
+  * Add a manpage to the Debian package
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Thu, 07 Jan 2016 15:00:19 -0800
+
 dumb-init (0.5.0) unstable; urgency=low
 
   * Add command-line option parsing (supplements existing environment
