@@ -1,6 +1,6 @@
 CFLAGS=-std=gnu99 -static -s -Wall -Werror -O3
 
-TEST_PACKAGE_DEPS := python python-pip
+TEST_PACKAGE_DEPS := python python-pip procps
 
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 
