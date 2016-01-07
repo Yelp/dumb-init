@@ -155,6 +155,21 @@ Running this same command without `dumb-init` would result in being unable to
 stop the container without `SIGKILL`, but with `dumb-init`, you can send it
 more humane signals like `SIGTERM`.
 
+## Building dumb-init
+
+Build requires a working compiler and libc headers and defaults to glibc.
+
+    $ make
+
+### Musl
+
+Statically compiled dumb-init is over 700KB due to glibc, but musl is
+now an option. On Debian/Ubuntu `apt-get install musl-tools` to
+install the source and wrappers.
+
+    $ CC=musl-gcc make
+
+When statically compiled with musl the binary size is around 20KB.
 
 ## See also
 
