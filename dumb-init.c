@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 
                 // single_child or not init, then leave!
                 if (!use_setsid || getpid() != 1) {
-                    DEBUG("Goodbye\n");
+                    DEBUG("Goodbye.\n");
                     exit(exit_status);
                 }
 
