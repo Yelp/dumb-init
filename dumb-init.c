@@ -39,7 +39,7 @@ void forward_signal(int signum) {
     int pid;
 
     if (child_pid > 0) {
-        pid = use_setsid ? (getpid() == 1 ? -1 : -child_pid) : child_pid;
+        pid = use_setsid ? -1 : child_pid;
         kill(pid, signum);
         DEBUG("Forwarded signal %d to %d from pid %d.\n", signum, pid, getpid());
     } else {
@@ -244,16 +244,19 @@ int main(int argc, char *argv[]) {
 
                 DEBUG("Child exited with status %d.\n", exit_status);
 
-                // Direct child exited, send SIGTERM to any remaining children
-                // if not using single_child mode and not done already
-                if (use_setsid && !signal_forwarded) {
-                    forward_signal(SIGTERM);
-                }
-
-                // single_child or not init, then leave!
-                if (!use_setsid || getpid() != 1) {
-                    DEBUG("Goodbye.\n");
-                    exit(exit_status);
+                if (use_setsid) {
+                    // send SIGTERM to any remaining children if not using
+                    // single child mode and not done already
+                    if (!signal_forwarded) {
+                        forward_signal(SIGTERM);
+                    }
+                } else {
+                    // in single child mode leave after direct child exited if
+                    // we are not init
+                    if (getpid() != 1) {
+                        DEBUG("Goodbye.\n");
+                        exit(exit_status);
+                    }
                 }
 
                 child_exit_status = exit_status;
