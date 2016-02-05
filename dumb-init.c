@@ -33,11 +33,15 @@
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
+int signal_forwarded = 0;
 
 void forward_signal(int signum) {
+    int pid;
+
     if (child_pid > 0) {
-        kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to children.\n", signum);
+        pid = use_setsid ? (getpid() == 1 ? -1 : -child_pid) : child_pid;
+        kill(pid, signum);
+        DEBUG("Forwarded signal %d to %d from pid %d.\n", signum, pid, getpid());
     } else {
         DEBUG("Didn't forward signal %d, no children exist yet.\n", signum);
     }
@@ -97,6 +101,8 @@ void handle_signal(int signum) {
     } else {
         forward_signal(signum);
     }
+
+    signal_forwarded = 1;
 }
 
 void print_help(char *argv[]) {
@@ -212,7 +218,7 @@ int main(int argc, char *argv[]) {
         exit(2);
     } else {
         pid_t killed_pid;
-        int exit_status, status;
+        int child_exit_status = 0, exit_status, status;
 
         DEBUG("Child spawned with PID %d.\n", child_pid);
 
@@ -220,13 +226,42 @@ int main(int argc, char *argv[]) {
             exit_status = WEXITSTATUS(status);
             DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
 
-            if (killed_pid == child_pid) {
-                // send SIGTERM to any remaining children
-                forward_signal(SIGTERM);
+            if (killed_pid == -1) {
+                if (errno == 10) {
+                    DEBUG("No more child processes to wait for. Exiting.\n");
+                    exit_status = child_exit_status;
+                } else {
+                    PRINTERR(
+                        "waitpid (errno=%d %s). Exiting.\n",
+                        errno,
+                        strerror(errno)
+                    );
+                }
 
-                DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
                 exit(exit_status);
+
+            } else if (killed_pid == child_pid) {
+
+                DEBUG("Child exited with status %d.\n", exit_status);
+
+                if (use_setsid) {
+                    // send SIGTERM to any remaining children if not using
+                    // single child mode and not done already
+                    if (!signal_forwarded) {
+                        forward_signal(SIGTERM);
+                    }
+                } else {
+                    // in single child mode leave after direct child exited if
+                    // we are not init
+                    if (getpid() != 1) {
+                        DEBUG("Goodbye.\n");
+                        exit(exit_status);
+                    }
+                }
+
+                child_exit_status = exit_status;
             }
+
         }
     }
 
