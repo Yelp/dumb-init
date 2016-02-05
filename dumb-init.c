@@ -39,7 +39,7 @@ void forward_signal(int signum) {
     int pid;
 
     if (child_pid > 0) {
-        pid = use_setsid ? -1 : child_pid;
+        pid = use_setsid ? (getpid() == 1 ? -1 : -child_pid) : child_pid;
         kill(pid, signum);
         DEBUG("Forwarded signal %d to %d from pid %d.\n", signum, pid, getpid());
     } else {
