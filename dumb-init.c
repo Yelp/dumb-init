@@ -217,8 +217,14 @@ int main(int argc, char *argv[]) {
         DEBUG("Child spawned with PID %d.\n", child_pid);
 
         while ((killed_pid = waitpid(-1, &status, 0))) {
-            exit_status = WEXITSTATUS(status);
-            DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
+            if (WIFEXITED(status)) {
+                exit_status = WEXITSTATUS(status);
+                DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
+            } else {
+                assert(WIFSIGNALED(status));
+                exit_status = 128 + WTERMSIG(status);
+                DEBUG("A child with PID %d was terminated by signal %d.\n", killed_pid, exit_status - 128);
+            }
 
             if (killed_pid == child_pid) {
                 // send SIGTERM to any remaining children
