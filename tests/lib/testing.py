@@ -12,9 +12,9 @@ SUSPEND_SIGNALS = frozenset([
 ])
 
 NORMAL_SIGNALS = frozenset(
-    set(range(1, 32))
-    - set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD])
-    - SUSPEND_SIGNALS
+    set(range(1, 32)) -
+    set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD]) -
+    SUSPEND_SIGNALS
 )
 
 
