@@ -1,3 +1,10 @@
+dumb-init (1.0.1) unstable; urgency=low
+
+  * Fix exit status for processes which exit due to signal (#59).
+    Thanks @msavage20 for the bug report!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Fri, 11 Mar 2016 14:05:58 -0800
+
 dumb-init (1.0.0) unstable; urgency=low
 
   * Compile dumb-init with musl and strip the binary of unnecessary symbols
