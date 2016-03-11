@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* register signal handlers */
-    for (signum = 1; signum < 32; signum++) {
+    for (signum = 1; signum < NSIG; signum++) {
         if (signum == SIGKILL || signum == SIGSTOP || signum == SIGCHLD)
             continue;
 
