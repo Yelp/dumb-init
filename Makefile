@@ -66,10 +66,14 @@ clean-tox:
 
 .PHONY: release
 release: builddeb-docker sdist
+	$(eval VERSION := $(shell cat VERSION))
 	# extract the built binary from the Debian package
-	dpkg-deb --fsys-tarfile dist/dumb-init_$(shell cat VERSION)_amd64.deb | \
+	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_amd64.deb | \
 		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
-	mv dist/dumb-init dist/dumb-init_$(shell cat VERSION)_amd64
+	mv dist/dumb-init dist/dumb-init_$(VERSION)_amd64
+	cd dist && \
+		sha256sum dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
+		> sha256sums
 
 .PHONY: sdist
 sdist: VERSION.h
