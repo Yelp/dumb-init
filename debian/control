@@ -3,26 +3,32 @@ Section: utils
 Priority: extra
 Maintainer: Chris Kuehl <ckuehl@yelp.com>
 Uploaders: Kent Wills <rkwills@yelp.com>
-Build-Depends: debhelper (>= 7), gcc, fakeroot, python, python-pytest,
- python-mock, help2man
-Standards-Version: 3.9.6
+Build-Depends:
+ debhelper (>= 9),
+ help2man,
+## Tests:
+ python,
+ python-pytest,
+ python-mock,
+Standards-Version: 3.9.7
+Homepage: https://github.com/Yelp/dumb-init
+Vcs-Browser: https://github.com/Yelp/dumb-init
+Vcs-Git: https://github.com/Yelp/dumb-init.git
 
 Package: dumb-init
 Architecture: any
 Depends: ${misc:Depends}
-Description: Simple wrapper script which proxies signals to a child
- Docker runs your processes as PID1. The kernel doesn't apply default signal
- handling to PID1 processes, so if your process doesn't register a custom
- signal handler, signals like TERM will just bounce off your process.
+Description: wrapper script which proxies signals to a child
+ dumb-init is a simple process supervisor and init system designed to run
+ as PID 1 inside minimal container environments (such as Docker).
  .
- This can result in cases where sending signals to a `docker run` process
- results in the run process exiting, but the container continuing in the
- background.
+ Lightweight containers have popularized the idea of running a single
+ process or service without normal init systems like systemd or sysvinit.
+ However, omitting an init system often leads to incorrect handling of
+ processes and signals, and can result in problems such as containers
+ which can't be gracefully stopped, or leaking containers which should
+ have been destroyed.
  .
- A workaround is to wrap your script in this proxy, which runs as PID1. Your
- process then runs as some other PID, and the kernel won't treat the signals
- that are proxied to them specially.
- .
- The proxy dies when your process dies, so it must not double-fork or do other
- weird things (this is basically a requirement for doing things sanely in
- Docker anyway).
+ dumb-init acts as PID 1 and immediately spawns your command as a child
+ process, taking care to properly handle and forward signals as they are
+ received.
