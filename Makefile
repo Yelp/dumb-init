@@ -72,7 +72,7 @@ release: builddeb-docker sdist
 		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
 	mv dist/dumb-init dist/dumb-init_$(VERSION)_amd64
 	cd dist && \
-		sha256sum dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
+		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
 		> sha256sums
 
 .PHONY: sdist
