@@ -3,4 +3,4 @@
 files
 substvars
 dumb-init/
-dumb-init.man
+dumb-init.1
