@@ -1,6 +1,6 @@
 CFLAGS=-std=gnu99 -static -s -Wall -Werror -O3
 
-TEST_PACKAGE_DEPS := python python-pip procps
+TEST_PACKAGE_DEPS := build-essential python python-pip procps python-dev python-setuptools
 
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 
@@ -13,8 +13,10 @@ DOCKER_DEB_TEST := sh -euxc ' \
 	&& cp -r /mnt/* "$$tmp" \
 	&& cd "$$tmp" \
 	&& pip install --upgrade pip \
-	&& /usr/local/bin/pip install --upgrade setuptools distribute \
-	&& /usr/local/bin/pip install -r requirements-dev.txt \
+	&& hash -r \
+	&& pip --version \
+	&& pip install --upgrade setuptools distribute \
+	&& pip install -r requirements-dev.txt \
 	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
@@ -22,16 +24,17 @@ DOCKER_DEB_TEST := sh -euxc ' \
 # test installation using `pip install`
 DOCKER_PYTHON_TEST := sh -uexc ' \
 	apt-get update \
-	&& apt-get install -y --no-install-recommends python-pip build-essential $(TEST_PACKAGE_DEPS) \
+	&& apt-get install -y --no-install-recommends $(TEST_PACKAGE_DEPS) \
 	&& tmp=$$(mktemp -d) \
 	&& cp -r /mnt/* "$$tmp" \
 	&& cd "$$tmp" \
 	&& python setup.py clean \
 	&& python setup.py sdist \
 	&& pip install --upgrade pip \
-	&& /usr/local/bin/pip install --upgrade setuptools distribute \
-	&& /usr/local/bin/pip install -vv dist/*.tar.gz \
-	&& /usr/local/bin/pip install -r requirements-dev.txt \
+	&& hash -r \
+	&& pip install --upgrade setuptools distribute \
+	&& pip install -vv dist/*.tar.gz \
+	&& pip install -r requirements-dev.txt \
 	&& py.test tests/ \
 	&& exec dumb-init /mnt/tests/test-zombies \
 '
@@ -39,9 +42,13 @@ DOCKER_PYTHON_TEST := sh -uexc ' \
 # test several Python versions using tox
 DOCKER_TOX_TEST := sh -uexc ' \
 	apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0x5BB92C09DB82666C \
-	&& echo "deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu trusty main" >> /etc/apt/sources.list \
+	&& echo "deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu xenial main" >> /etc/apt/sources.list \
 	&& apt-get update \
-	&& apt-get install -y --no-install-recommends python2.6 python2.7 python3.4 python-tox build-essential git $(TEST_PACKAGE_DEPS) \
+	&& apt-get install -y --no-install-recommends python2.6-dev python2.7-dev python3.4-dev python3.5-dev git $(TEST_PACKAGE_DEPS) \
+	&& echo "We cannot use the Ubuntu versions of tox or virtualenv:" \
+	&& echo "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=754248" \
+	&& pip install tox virtualenv \
+	&& hash -r \
 	&& tmp=$$(mktemp -du) \
 	&& cp -r /mnt "$$tmp" \
 	&& cd "$$tmp" \
@@ -102,18 +109,21 @@ test:
 install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
 
-.PHONY: itest itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
-itest: itest_lucid itest_precise itest_trusty itest_wheezy itest_jessie itest_stretch
+ITEST_TARGETS = itest_lucid itest_precise itest_trusty itest_xenial itest_wheezy itest_jessie itest_stretch
+
+.PHONY: itest $(ITEST_TARGETS)
+itest: $(ITEST_TARGETS)
 
 itest_lucid: _itest-ubuntu-lucid
 itest_precise: _itest-ubuntu-precise
 itest_trusty: _itest-ubuntu-trusty
+itest_xenial: _itest-ubuntu-xenial
 itest_wheezy: _itest-debian-wheezy
 itest_jessie: _itest-debian-jessie
 itest_stretch: _itest-debian-stretch
 
 itest_tox:
-	$(DOCKER_RUN_TEST) ubuntu:trusty $(DOCKER_TOX_TEST)
+	$(DOCKER_RUN_TEST) ubuntu:xenial $(DOCKER_TOX_TEST)
 
 _itest-%: _itest_deb-% _itest_python-%
 	@true
