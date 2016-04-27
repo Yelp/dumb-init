@@ -18,6 +18,7 @@ TARGETS = [
     'itest_lucid',
     'itest_precise',
     'itest_trusty',
+    'itest_xenial',
     'itest_wheezy',
     'itest_jessie',
     'itest_stretch',
