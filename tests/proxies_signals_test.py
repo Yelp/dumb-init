@@ -9,7 +9,7 @@ from tests.lib.testing import NORMAL_SIGNALS
 from tests.lib.testing import pid_tree
 
 
-def test_prints_signals(both_debug_modes, both_setsid_modes):
+def test_proxies_signals(both_debug_modes, both_setsid_modes):
     """Ensure dumb-init proxies regular signals to its child."""
     proc = Popen(
         ('dumb-init', sys.executable, '-m', 'tests.lib.print_signals'),
