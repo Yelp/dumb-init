@@ -1,3 +1,4 @@
+SHELL=bash
 CFLAGS=-std=gnu99 -static -s -Wall -Werror -O3
 
 TEST_PACKAGE_DEPS := build-essential python python-pip procps python-dev python-setuptools
@@ -129,9 +130,7 @@ _itest-%: _itest_deb-% _itest_python-%
 	@true
 
 _itest_python-%:
-	$(eval DOCKER_IMG := $(shell echo $@ | cut -d- -f2- | sed 's/-/:/'))
-	$(DOCKER_RUN_TEST) $(DOCKER_IMG) $(DOCKER_PYTHON_TEST)
+	$(DOCKER_RUN_TEST) $(shell sed 's/-/:/' <<< "$*") $(DOCKER_PYTHON_TEST)
 
 _itest_deb-%: builddeb-docker
-	$(eval DOCKER_IMG := $(shell echo $@ | cut -d- -f2- | sed 's/-/:/'))
-	$(DOCKER_RUN_TEST) $(DOCKER_IMG) $(DOCKER_DEB_TEST)
+	$(DOCKER_RUN_TEST) $(shell sed 's/-/:/' <<< "$*") $(DOCKER_DEB_TEST)
