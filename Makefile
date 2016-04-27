@@ -4,6 +4,10 @@ TEST_PACKAGE_DEPS := build-essential python python-pip procps python-dev python-
 
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
 
+# We need to use tox >= 2 since we test Python3.5; on some systems, this is the
+# binary "tox2" instead of just "tox".
+TOX := $(shell command -v tox2 || echo tox)
+
 # test installation using Debian packages
 DOCKER_DEB_TEST := sh -euxc ' \
 	apt-get update \
@@ -103,11 +107,11 @@ docker-image:
 
 .PHONY: test
 test:
-	tox
+	$(TOX)
 
 .PHONY: install-hooks
 install-hooks:
-	tox -e pre-commit -- install -f --install-hooks
+	$(TOX) -e pre-commit -- install -f --install-hooks
 
 ITEST_TARGETS = itest_lucid itest_precise itest_trusty itest_xenial itest_wheezy itest_jessie itest_stretch
 
