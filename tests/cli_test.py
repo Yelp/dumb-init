@@ -69,6 +69,7 @@ def test_verbose(flag):
         (
             b'^\[dumb-init\] Child spawned with PID [0-9]+\.\n'
             b'\[dumb-init\] setsid complete\.\n'
+            b'\[dumb-init\] Received signal 17\.\n'
             b'\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
             b'\[dumb-init\] Forwarded signal 15 to children\.\n'
             b'\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
@@ -88,6 +89,7 @@ def test_verbose_and_single_child(flag1, flag2):
     assert re.match(
         (
             b'^\[dumb-init\] Child spawned with PID [0-9]+\.\n'
+            b'\[dumb-init\] Received signal 17\.\n'
             b'\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
             b'\[dumb-init\] Forwarded signal 15 to children\.\n'
             b'\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'

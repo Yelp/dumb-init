@@ -35,12 +35,8 @@ char debug = 0;
 char use_setsid = 1;
 
 void forward_signal(int signum) {
-    if (child_pid > 0) {
-        kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to children.\n", signum);
-    } else {
-        DEBUG("Didn't forward signal %d, no children exist yet.\n", signum);
-    }
+    kill(use_setsid ? -child_pid : child_pid, signum);
+    DEBUG("Forwarded signal %d to children.\n", signum);
 }
 
 /*
@@ -78,8 +74,26 @@ void forward_signal(int signum) {
 */
 void handle_signal(int signum) {
     DEBUG("Received signal %d.\n", signum);
+    if (signum == SIGCHLD) {
+        int status, exit_status;
+        pid_t killed_pid;
+        while ((killed_pid = waitpid(-1, &status, WNOHANG)) > 0) {
+            if (WIFEXITED(status)) {
+                exit_status = WEXITSTATUS(status);
+                DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
+            } else {
+                assert(WIFSIGNALED(status));
+                exit_status = 128 + WTERMSIG(status);
+                DEBUG("A child with PID %d was terminated by signal %d.\n", killed_pid, exit_status - 128);
+            }
 
-    if (
+            if (killed_pid == child_pid) {
+                forward_signal(SIGTERM);  // send SIGTERM to any remaining children
+                DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
+                exit(exit_status);
+            }
+        }
+    } else if (
         signum == SIGTSTP || // tty: background yourself
         signum == SIGTTIN || // tty: stop reading
         signum == SIGTTOU    // tty: stop writing
@@ -121,9 +135,9 @@ void print_help(char *argv[]) {
     );
 }
 
-int main(int argc, char *argv[]) {
-    int signum, opt;
 
+char **parse_command(int argc, char *argv[]) {
+    int opt;
     struct option long_options[] = {
         {"help",         no_argument, NULL, 'h'},
         {"single-child", no_argument, NULL, 'c'},
@@ -134,18 +148,18 @@ int main(int argc, char *argv[]) {
         switch (opt) {
             case 'h':
                 print_help(argv);
-                return 0;
+                exit(0);
             case 'v':
                 debug = 1;
                 break;
             case 'V':
                 fprintf(stderr, "dumb-init v%s", VERSION);
-                return 0;
+                exit(0);
             case 'c':
                 use_setsid = 0;
                 break;
             default:
-                return 1;
+                exit(1);
         }
     }
 
@@ -156,9 +170,8 @@ int main(int argc, char *argv[]) {
             "Try %s --help for full usage.\n",
             argv[0], argv[0]
         );
-        return 1;
+        exit(1);
     }
-    char **cmd = &argv[optind];
 
     char *debug_env = getenv("DUMB_INIT_DEBUG");
     if (debug_env && strcmp(debug_env, "1") == 0) {
@@ -172,29 +185,20 @@ int main(int argc, char *argv[]) {
         DEBUG("Not running in setsid mode.\n");
     }
 
-    /* register signal handlers */
-    for (signum = 1; signum < 32; signum++) {
-        if (signum == SIGKILL || signum == SIGSTOP || signum == SIGCHLD)
-            continue;
+    return &argv[optind];
+}
 
-        if (signal(signum, handle_signal) == SIG_ERR) {
-            PRINTERR("Couldn't register signal handler for signal `%d`. Exiting.\n", signum);
-            return 1;
-        }
-    }
+int main(int argc, char *argv[]) {
+    char **cmd = parse_command(argc, argv);
 
-    /* launch our process */
     child_pid = fork();
-
     if (child_pid < 0) {
         PRINTERR("Unable to fork. Exiting.\n");
         return 1;
-    }
-
-    if (child_pid == 0) {
+    } else if (child_pid == 0) {
+        /* child */
         if (use_setsid) {
-            pid_t result = setsid();
-            if (result == -1) {
+            if (setsid() == -1) {
                 PRINTERR(
                     "Unable to setsid (errno=%d %s). Exiting.\n",
                     errno,
@@ -204,37 +208,22 @@ int main(int argc, char *argv[]) {
             }
             DEBUG("setsid complete.\n");
         }
-
         execvp(cmd[0], &cmd[0]);
 
         // if this point is reached, exec failed, so we should exit nonzero
         PRINTERR("%s: %s\n", argv[1], strerror(errno));
-        exit(2);
+        return 2;
     } else {
-        pid_t killed_pid;
-        int exit_status, status;
+        /* parent */
+        int signum;
+        sigset_t all_signals;
+        sigfillset(&all_signals);
+        sigprocmask(SIG_BLOCK, &all_signals, NULL);
 
         DEBUG("Child spawned with PID %d.\n", child_pid);
-
-        while ((killed_pid = waitpid(-1, &status, 0))) {
-            if (WIFEXITED(status)) {
-                exit_status = WEXITSTATUS(status);
-                DEBUG("A child with PID %d exited with exit status %d.\n", killed_pid, exit_status);
-            } else {
-                assert(WIFSIGNALED(status));
-                exit_status = 128 + WTERMSIG(status);
-                DEBUG("A child with PID %d was terminated by signal %d.\n", killed_pid, exit_status - 128);
-            }
-
-            if (killed_pid == child_pid) {
-                // send SIGTERM to any remaining children
-                forward_signal(SIGTERM);
-
-                DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
-                exit(exit_status);
-            }
+        for (;;) {
+            sigwait(&all_signals, &signum);
+            handle_signal(signum);
         }
     }
-
-    return 0;
 }
