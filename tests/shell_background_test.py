@@ -55,7 +55,7 @@ def test_shell_background_support_setsid(both_debug_modes, setsid_enabled):
         os.kill(pid, SIGKILL)
 
 
-def test_prints_signals(both_debug_modes, setsid_disabled):
+def test_shell_background_support_without_setsid(both_debug_modes, setsid_disabled):
     """In non-setsid mode, dumb-init should forward the signals SIGTSTP,
     SIGTTOU, and SIGTTIN, and then suspend itself.
     """
@@ -70,6 +70,7 @@ def test_prints_signals(both_debug_modes, setsid_disabled):
         assert process_state(proc.pid) in ['running', 'sleeping']
         proc.send_signal(signum)
         assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
+        os.waitpid(proc.pid, os.WUNTRACED)
         assert process_state(proc.pid) == 'stopped'
 
         proc.send_signal(SIGCONT)
