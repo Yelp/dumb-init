@@ -73,7 +73,7 @@ clean-tox:
 	rm -rf .tox
 
 .PHONY: release
-release: builddeb-docker sdist
+release: sdist builddeb-docker
 	$(eval VERSION := $(shell cat VERSION))
 	# extract the built binary from the Debian package
 	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_amd64.deb | \

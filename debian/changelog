@@ -1,3 +1,12 @@
+dumb-init (1.0.2) unstable; urgency=low
+
+  * Rewrite signal handling to process signals synchronously (#72).
+    This shouldn't change behavior, but does eliminate some undefined behavior
+    and potential edge cases (especially race conditions).
+    Thanks @msavage20 for the bug report (again)!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Mon, 02 May 2016 10:59:14 -0700
+
 dumb-init (1.0.1) unstable; urgency=low
 
   * Fix exit status for processes which exit due to signal (#59).
