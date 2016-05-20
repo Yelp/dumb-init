@@ -7,7 +7,7 @@ MAINTAINER Chris Kuehl <ckuehl@yelp.com>
 # debian/control instead.
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential devscripts equivs musl-tools python python-pytest python-mock && \
+        build-essential devscripts equivs && \
     rm -rf /var/lib/apt/lists/* && apt-get clean
 WORKDIR /mnt
 
