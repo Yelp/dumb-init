@@ -166,21 +166,38 @@ Running this same command without `dumb-init` would result in being unable to
 stop the container without `SIGKILL`, but with `dumb-init`, you can send it
 more humane signals like `SIGTERM`.
 
+
 ## Building dumb-init
 
-Build requires a working compiler and libc headers and defaults to glibc.
+Building the dumb-init binary requires a working compiler and libc headers and
+defaults to glibc.
 
     $ make
 
-### Musl
 
-Statically compiled dumb-init is over 700KB due to glibc, but musl is
-now an option. On Debian/Ubuntu `apt-get install musl-tools` to
-install the source and wrappers.
+### Building with musl
+
+Statically compiled dumb-init is over 700KB due to glibc, but musl is now an
+option. On Debian/Ubuntu `apt-get install musl-tools` to install the source and
+wrappers, then just:
 
     $ CC=musl-gcc make
 
 When statically compiled with musl the binary size is around 20KB.
+
+
+### Building the Debian package
+
+We use the standard Debian conventions for specifying build dependencies (look
+in `debian/control`). An easy way to get started is to `apt-get install
+build-essential devscripts equivs`, and then `sudo mk-build-deps -i --remove`
+to install all of the missing build dependencies automatically. You can then
+use `make builddeb` to build dumb-init Debian packages.
+
+If you prefer an automated Debian package build using Docker, just run `make
+builddeb-docker`. This is easier, but requires you to have Docker running on
+your machine.
+
 
 ## See also
 

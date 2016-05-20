@@ -6,6 +6,7 @@ Uploaders: Kent Wills <rkwills@yelp.com>
 Build-Depends:
  debhelper (>= 9),
  help2man,
+ musl-tools,
 ## Tests:
  python,
  python-pytest,
