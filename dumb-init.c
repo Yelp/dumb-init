@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
         execvp(cmd[0], &cmd[0]);
 
         // if this point is reached, exec failed, so we should exit nonzero
-        PRINTERR("%s: %s\n", argv[1], strerror(errno));
+        PRINTERR("%s: %s\n", cmd[0], strerror(errno));
         return 2;
     } else {
         /* parent */

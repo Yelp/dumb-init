@@ -6,6 +6,8 @@ import time
 from subprocess import PIPE
 from subprocess import Popen
 
+import pytest
+
 from tests.lib.testing import is_alive
 from tests.lib.testing import pid_tree
 
@@ -125,9 +127,15 @@ def test_processes_dont_receive_term_on_exit_if_no_setsid(
     os.kill(child_pid, signal.SIGKILL)
 
 
-def test_fails_nonzero_with_bad_exec(both_debug_modes, both_setsid_modes):
+@pytest.mark.parametrize('args', [
+    ('/doesnotexist',),
+    ('--', '/doesnotexist'),
+    ('-c', '/doesnotexist'),
+    ('--single-child', '--', '/doesnotexist'),
+])
+def test_fails_nonzero_with_bad_exec(args, both_debug_modes, both_setsid_modes):
     """If dumb-init can't exec as requested, it should exit nonzero."""
-    proc = Popen(('dumb-init', '/doesnotexist'), stderr=PIPE)
+    proc = Popen(('dumb-init',) + args, stderr=PIPE)
     proc.wait()
     assert proc.returncode != 0
     assert (
