@@ -1,3 +1,11 @@
+dumb-init (1.0.3) unstable; urgency=medium
+
+  * Fix incorrect error message when calling with bad arguments (e.g. a
+    command which did not exist) and passing flags (#82).
+  * Tag Python packages of dumb-init properly (#75).
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Wed, 01 Jun 2016 20:25:24 -0400
+
 dumb-init (1.0.2) unstable; urgency=low
 
   * Rewrite signal handling to process signals synchronously (#72).

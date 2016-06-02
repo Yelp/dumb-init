@@ -10,6 +10,9 @@ override_dh_clean:
 	$(RM) -rv .cache
 	dh_clean $(MAN)
 
+override_dh_auto_clean:
+	@true
+
 $(MAN):
 	help2man --name 'a minimal init system for Linux containers' \
 		--no-discard-stderr \
