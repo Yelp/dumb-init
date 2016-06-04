@@ -33,8 +33,20 @@
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
+int sigterm_replacement = 15;
+
+
+int translate_signal(int signum) {
+    switch (signum) {
+        case SIGTERM:
+            return sigterm_replacement;
+        default:
+            return signum;
+    }
+}
 
 void forward_signal(int signum) {
+    signum = translate_signal(signum);
     kill(use_setsid ? -child_pid : child_pid, signum);
     DEBUG("Forwarded signal %d to children.\n", signum);
 }
@@ -125,6 +137,7 @@ void print_help(char *argv[]) {
         "   -c, --single-child   Run in single-child mode.\n"
         "                        In this mode, signals are only proxied to the\n"
         "                        direct child and not any of its descendants.\n"
+        "   -s, --signal         Signal to use in place of SIGTERM.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -136,15 +149,21 @@ void print_help(char *argv[]) {
 }
 
 
+void write_sigterm_replacement(char *arg) {
+    sigterm_replacement = strtol(arg, NULL, 10);
+}
+
+
 char **parse_command(int argc, char *argv[]) {
     int opt;
     struct option long_options[] = {
-        {"help",         no_argument, NULL, 'h'},
-        {"single-child", no_argument, NULL, 'c'},
-        {"verbose",      no_argument, NULL, 'v'},
-        {"version",      no_argument, NULL, 'V'},
+        {"help",         no_argument,       NULL, 'h'},
+        {"single-child", no_argument,       NULL, 'c'},
+        {"signal",       required_argument, NULL, 's'},
+        {"verbose",      no_argument,       NULL, 'v'},
+        {"version",      no_argument,       NULL, 'V'},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVc", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVcs:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -157,6 +176,9 @@ char **parse_command(int argc, char *argv[]) {
                 exit(0);
             case 'c':
                 use_setsid = 0;
+                break;
+            case 's':
+                write_sigterm_replacement(optarg);
                 break;
             default:
                 exit(1);
