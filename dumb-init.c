@@ -30,18 +30,24 @@
     } \
 } while (0)
 
+#define MAXSIG 32
+
+int signal_rewrite[MAXSIG] = {
+    0,  1,  2,  3,  4,  5,  6,  7,
+    8,  9,  10, 11, 12, 13, 14, 15,
+    16, 17, 18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29, 30, 31
+};
+
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
-int sigterm_replacement = 15;
-
 
 int translate_signal(int signum) {
-    switch (signum) {
-        case SIGTERM:
-            return sigterm_replacement;
-        default:
-            return signum;
+    if (signum < 0 || signum >= MAXSIG) {
+        return signum;
+    } else {
+        return signal_rewrite[signum];
     }
 }
 
@@ -137,7 +143,7 @@ void print_help(char *argv[]) {
         "   -c, --single-child   Run in single-child mode.\n"
         "                        In this mode, signals are only proxied to the\n"
         "                        direct child and not any of its descendants.\n"
-        "   -s, --signal         Signal to use in place of SIGTERM.\n"
+        "   -r, --rewrite s:r    Rewrite signum s to signum r before proxying.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -148,22 +154,47 @@ void print_help(char *argv[]) {
     );
 }
 
-
-void write_sigterm_replacement(char *arg) {
-    sigterm_replacement = strtol(arg, NULL, 10);
+void print_rewrite_signum_help() {
+    fprintf(
+        stderr,
+        "Usage: -r option takes <signum>:<signum>, where <signum> "
+        "is between 1 and %d.\n"
+        "Use --help for full usage.\n",
+        MAXSIG
+    );
+    exit(1);
 }
 
+void rewrite_signum(char *arg) {
+    char *rest;
+    int signum, replacement;
+
+    signum = strtol(arg, &rest, 10);
+
+    if (*rest != ':') {
+        print_rewrite_signum_help();
+    }
+
+    replacement = strtol(++rest, NULL, 10);;
+
+    if (signum <= 0 || signum > MAXSIG ||
+        replacement <= 0 || replacement > MAXSIG) {
+        print_rewrite_signum_help();
+    }
+
+    signal_rewrite[signum] = replacement;
+}
 
 char **parse_command(int argc, char *argv[]) {
     int opt;
     struct option long_options[] = {
         {"help",         no_argument,       NULL, 'h'},
         {"single-child", no_argument,       NULL, 'c'},
-        {"signal",       required_argument, NULL, 's'},
+        {"rewrite",      required_argument, NULL, 'r'},
         {"verbose",      no_argument,       NULL, 'v'},
         {"version",      no_argument,       NULL, 'V'},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVcs:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -177,8 +208,8 @@ char **parse_command(int argc, char *argv[]) {
             case 'c':
                 use_setsid = 0;
                 break;
-            case 's':
-                write_sigterm_replacement(optarg);
+            case 'r':
+                rewrite_signum(optarg);
                 break;
             default:
                 exit(1);
