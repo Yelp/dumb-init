@@ -40,7 +40,7 @@ def test_help_message(flag, both_debug_modes, both_setsid_modes, current_version
         b'   -c, --single-child   Run in single-child mode.\n'
         b'                        In this mode, signals are only proxied to the\n'
         b'                        direct child and not any of its descendants.\n'
-        b'   -r, --rewrite s:r    Rewrite signum s to signum r before proxying.\n'
+        b'   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n'
         b'   -v, --verbose        Print debugging information to stderr.\n'
         b'   -h, --help           Print this help message and exit.\n'
         b'   -V, --version        Print the current version and exit.\n'
@@ -96,4 +96,32 @@ def test_verbose_and_single_child(flag1, flag2):
             b'\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
         ),
         stderr,
+    )
+
+
+@pytest.mark.parametrize('extra_args', [
+    ('-r',),
+    ('-r', ''),
+    ('-r', 'herp'),
+    ('-r', 'herp:derp'),
+    ('-r', '15'),
+    ('-r', '15::12'),
+    ('-r', '15:derp'),
+    ('-r', '15:12', '-r'),
+    ('-r', '15:12', '-r', '0'),
+    ('-r', '15:12', '-r', '1:32'),
+])
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_rewrite_errors(extra_args):
+    proc = Popen(
+        ('dumb-init',) + extra_args + ('echo', 'oh,', 'hi'),
+        stdout=PIPE, stderr=PIPE,
+    )
+    stdout, stderr = proc.communicate()
+    assert proc.returncode == 1
+    assert stderr == (
+        b'Usage: -r option takes <signum>:<signum>, where <signum> '
+        b'is between 1 and 31.\n'
+        b'This option can be specified multiple times.\n'
+        b'Use --help for full usage.\n'
     )
