@@ -11,6 +11,7 @@ import pytest
 
 from tests.lib.testing import NORMAL_SIGNALS
 from tests.lib.testing import pid_tree
+from tests.lib.testing import process_state
 
 
 @contextmanager
@@ -70,6 +71,7 @@ def _rewrite_map_to_args(rewrite_map):
         [signal.SIGINT, signal.SIGQUIT, signal.SIGCONT, signal.SIGTERM],
     ),
 
+    # Lowest possible and highest possible signals.
     (
         {1: 31, 31: 1},
         [1, 31],
@@ -83,3 +85,27 @@ def test_proxies_signals_with_rewrite(rewrite_map, sequence, expected):
         for send, expect_receive in zip(sequence, expected):
             proc.send_signal(send)
             assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
+
+
+@pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
+def test_default_rewrites_can_be_overriden_with_setsid_enabled():
+    """In setsid mode, dumb-init should allow overwriting the default
+    rewrites (but still suspend itself).
+    """
+    rewrite_map = {
+        signal.SIGTTIN: signal.SIGTERM,
+        signal.SIGTTOU: signal.SIGINT,
+        signal.SIGTSTP: signal.SIGHUP,
+    }
+    with _print_signals(_rewrite_map_to_args(rewrite_map)) as proc:
+        for send, expect_receive in rewrite_map.items():
+            assert process_state(proc.pid) in ['running', 'sleeping']
+            proc.send_signal(send)
+
+            assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
+            os.waitpid(proc.pid, os.WUNTRACED)
+            assert process_state(proc.pid) == 'stopped'
+
+            proc.send_signal(signal.SIGCONT)
+            assert proc.stdout.readline() == '{0}\n'.format(signal.SIGCONT).encode('ascii')
+            assert process_state(proc.pid) in ['running', 'sleeping']
