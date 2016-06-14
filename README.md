@@ -106,6 +106,23 @@ completely transparent; you can even string multiple together (like `dumb-init
 dumb-init echo 'oh, hi'`).
 
 
+### Signal rewriting
+
+dumb-init allows rewriting incoming signals before proxying them. This is
+useful in cases where you have a Docker supervisor (like Mesos or Kubernates)
+which always sends a standard signal (e.g. SIGTERM). Some apps require a
+different stop signal in order to do graceful cleanup.
+
+For example, to rewrite the signal SIGTERM (number 15) to SIGQUIT (number 3),
+just add `--rewrite 15:3` on the command line.
+
+One caveat with this feature: for job control signals (SIGTSTP, SIGTTIN,
+SIGTTOU), dumb-init will always suspend itself after receiving the signal, even
+if you rewrite it to something else. Additionally, if in setsid mode, dumb-init
+will always forward SIGSTOP instead, since the original signals have no effect
+unless the child has handlers for them.
+
+
 ## Installing inside Docker containers
 
 You have a few options for using `dumb-init`:
