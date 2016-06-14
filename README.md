@@ -158,7 +158,7 @@ If you don't have an internal apt server, you can use `dpkg -i` to install the
 One possibility is with the following commands in your Dockerfile:
 
 ```bash
-RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.0.3/dumb-init_1.0.3_amd64.deb
+RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.1.0/dumb-init_1.1.0_amd64.deb
 RUN dpkg -i dumb-init_*.deb
 ```
 
@@ -169,7 +169,7 @@ Since dumb-init is released as a statically-linked binary, you can usually just
 plop it into your images. Here's an example of doing that in a Dockerfile:
 
 ```bash
-RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.0.3/dumb-init_1.0.3_amd64
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.1.0/dumb-init_1.1.0_amd64
 RUN chmod +x /usr/local/bin/dumb-init
 ```
 

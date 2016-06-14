@@ -1,3 +1,13 @@
+dumb-init (1.1.0) unstable; urgency=medium
+
+  * Add ability to rewrite incoming signals before proxying via the --rewrite
+    flag. Thanks @mcclurmc for the PR (#83)!
+  * Add ability to not rewrite incoming "suspend" job control signals in
+    setsid mode (#85).
+  * Add ability to ignore (not proxy) incoming signals (#86).
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Tue, 14 Jun 2016 11:45:50 -0700
+
 dumb-init (1.0.3) unstable; urgency=medium
 
   * Fix incorrect error message when calling with bad arguments (e.g. a
