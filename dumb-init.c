@@ -75,19 +75,6 @@ void forward_signal(int signum) {
  * The libc manual is useful:
  * https://www.gnu.org/software/libc/manual/html_node/Job-Control-Signals.html
  *
- * When running in setsid mode, however, it is not sufficient to forward
- * SIGTSTP/SIGTTIN/SIGTTOU in most cases. If the process has not added a custom
- * signal handler for these signals, then the kernel will not apply default
- * signal handling behavior (which would be suspending the process) since it is
- * a member of an orphaned process group.
- *
- * Sadly this doesn't appear to be well documented except in the kernel itself:
- * https://github.com/torvalds/linux/blob/v4.2/kernel/signal.c#L2296-L2299
- *
- * Forwarding SIGSTOP instead is effective, though not ideal; unlike SIGTSTP,
- * SIGSTOP cannot be caught, and so it doesn't allow processes a change to
- * clean up before suspending. In non-setsid mode, we proxy the original signal
- * instead of SIGSTOP for this reason.
 */
 void handle_signal(int signum) {
     DEBUG("Received signal %d.\n", signum);
@@ -110,23 +97,12 @@ void handle_signal(int signum) {
                 exit(exit_status);
             }
         }
-    } else if (
-        signum == SIGTSTP || // tty: background yourself
-        signum == SIGTTIN || // tty: stop reading
-        signum == SIGTTOU    // tty: stop writing
-    ) {
-        if (use_setsid) {
-            DEBUG("Running in setsid mode, so forwarding SIGSTOP instead.\n");
-            forward_signal(SIGSTOP);
-        } else {
-            DEBUG("Not running in setsid mode, so forwarding the original signal (%d).\n", signum);
-            forward_signal(signum);
-        }
-
-        DEBUG("Suspending self due to TTY signal.\n");
-        kill(getpid(), SIGSTOP);
     } else {
         forward_signal(signum);
+        if (signum == SIGTSTP || signum == SIGTTOU || signum == SIGTTIN) {
+            DEBUG("Suspending self due to TTY signal.\n");
+            kill(getpid(), SIGSTOP);
+        }
     }
 }
 
@@ -176,6 +152,11 @@ void parse_rewrite_signum(char *arg) {
     } else {
         print_rewrite_signum_help();
     }
+}
+
+void set_rewrite_to_sigstop_if_not_defined(int signum) {
+    if (signal_rewrite[signum] == 0)
+        signal_rewrite[signum] = SIGSTOP;
 }
 
 char **parse_command(int argc, char *argv[]) {
@@ -229,6 +210,12 @@ char **parse_command(int argc, char *argv[]) {
     if (setsid_env && strcmp(setsid_env, "0") == 0) {
         use_setsid = 0;
         DEBUG("Not running in setsid mode.\n");
+    }
+
+    if (use_setsid) {
+        set_rewrite_to_sigstop_if_not_defined(SIGTSTP);
+        set_rewrite_to_sigstop_if_not_defined(SIGTTOU);
+        set_rewrite_to_sigstop_if_not_defined(SIGTTIN);
     }
 
     return &argv[optind];

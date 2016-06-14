@@ -116,11 +116,20 @@ different stop signal in order to do graceful cleanup.
 For example, to rewrite the signal SIGTERM (number 15) to SIGQUIT (number 3),
 just add `--rewrite 15:3` on the command line.
 
-One caveat with this feature: for job control signals (SIGTSTP, SIGTTIN,
-SIGTTOU), dumb-init will always suspend itself after receiving the signal, even
-if you rewrite it to something else. Additionally, if in setsid mode, dumb-init
-will always forward SIGSTOP instead, since the original signals have no effect
-unless the child has handlers for them.
+
+#### Signal rewriting special case
+
+When running in setsid mode, it is not sufficient to forward
+`SIGTSTP`/`SIGTTIN`/`SIGTTOU` in most cases, since if the process has not added
+a custom signal handler for these signals, then the kernel will not apply
+default signal handling behavior (which would be suspending the process) since
+it is a member of an orphaned process group. For this reason, we set default
+rewrites to `SIGSTOP` from those three signals. You can opt out of this
+behavior by rewriting the signals back to their original values, if desired.
+
+One caveat with this feature: for job control signals (`SIGTSTP`, `SIGTTIN`,
+`SIGTTOU`), dumb-init will always suspend itself after receiving the signal,
+even if you rewrite it to something else.
 
 
 ## Installing inside Docker containers
