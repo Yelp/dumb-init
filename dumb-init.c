@@ -30,11 +30,28 @@
     } \
 } while (0)
 
+// Signals we care about are numbered from 1 to 31, inclusive.
+// (32 and above are real-time signals.)
+#define MAXSIG 31
+
+// Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
+int signal_rewrite[MAXSIG + 1] = {0};
+
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
 
+int translate_signal(int signum) {
+    if (signum <= 0 || signum > MAXSIG) {
+        return signum;
+    } else {
+        int translated = signal_rewrite[signum];
+        return translated == 0 ? signum : translated;
+    }
+}
+
 void forward_signal(int signum) {
+    signum = translate_signal(signum);
     kill(use_setsid ? -child_pid : child_pid, signum);
     DEBUG("Forwarded signal %d to children.\n", signum);
 }
@@ -125,6 +142,7 @@ void print_help(char *argv[]) {
         "   -c, --single-child   Run in single-child mode.\n"
         "                        In this mode, signals are only proxied to the\n"
         "                        direct child and not any of its descendants.\n"
+        "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -135,16 +153,41 @@ void print_help(char *argv[]) {
     );
 }
 
+void print_rewrite_signum_help() {
+    fprintf(
+        stderr,
+        "Usage: -r option takes <signum>:<signum>, where <signum> "
+        "is between 1 and %d.\n"
+        "This option can be specified multiple times.\n"
+        "Use --help for full usage.\n",
+        MAXSIG
+    );
+    exit(1);
+}
+
+void parse_rewrite_signum(char *arg) {
+    int signum, replacement;
+    if (
+        sscanf(arg, "%d:%d", &signum, &replacement) == 2 &&
+        (signum >= 1 && signum <= MAXSIG) &&
+        (replacement >= 1 && replacement <= MAXSIG)
+    ) {
+        signal_rewrite[signum] = replacement;
+    } else {
+        print_rewrite_signum_help();
+    }
+}
 
 char **parse_command(int argc, char *argv[]) {
     int opt;
     struct option long_options[] = {
-        {"help",         no_argument, NULL, 'h'},
-        {"single-child", no_argument, NULL, 'c'},
-        {"verbose",      no_argument, NULL, 'v'},
-        {"version",      no_argument, NULL, 'V'},
+        {"help",         no_argument,       NULL, 'h'},
+        {"single-child", no_argument,       NULL, 'c'},
+        {"rewrite",      required_argument, NULL, 'r'},
+        {"verbose",      no_argument,       NULL, 'v'},
+        {"version",      no_argument,       NULL, 'V'},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVc", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -157,6 +200,9 @@ char **parse_command(int argc, char *argv[]) {
                 exit(0);
             case 'c':
                 use_setsid = 0;
+                break;
+            case 'r':
+                parse_rewrite_signum(optarg);
                 break;
             default:
                 exit(1);
