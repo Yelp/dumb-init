@@ -35,7 +35,7 @@
 #define MAXSIG 31
 
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
-int signal_rewrite[MAXSIG + 1] = {0};
+int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
 
 pid_t child_pid = -1;
 char debug = 0;
@@ -46,14 +46,18 @@ int translate_signal(int signum) {
         return signum;
     } else {
         int translated = signal_rewrite[signum];
-        return translated == 0 ? signum : translated;
+        return translated == -1 ? signum : translated;
     }
 }
 
 void forward_signal(int signum) {
     signum = translate_signal(signum);
-    kill(use_setsid ? -child_pid : child_pid, signum);
-    DEBUG("Forwarded signal %d to children.\n", signum);
+    if (signum != -1) {
+        kill(use_setsid ? -child_pid : child_pid, signum);
+        DEBUG("Forwarded signal %d to children.\n", signum);
+    } else {
+        DEBUG("Not forwarding signal %d to children (ignored).\n", signum);
+    }
 }
 
 /*
@@ -119,6 +123,8 @@ void print_help(char *argv[]) {
         "                        In this mode, signals are only proxied to the\n"
         "                        direct child and not any of its descendants.\n"
         "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
+        "                        To ignore (not proxy) a signal, rewrite it to 0.\n"
+        "                        This option can be specified multiple times.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -146,7 +152,7 @@ void parse_rewrite_signum(char *arg) {
     if (
         sscanf(arg, "%d:%d", &signum, &replacement) == 2 &&
         (signum >= 1 && signum <= MAXSIG) &&
-        (replacement >= 1 && replacement <= MAXSIG)
+        (replacement >= 0 && replacement <= MAXSIG)
     ) {
         signal_rewrite[signum] = replacement;
     } else {
@@ -155,7 +161,7 @@ void parse_rewrite_signum(char *arg) {
 }
 
 void set_rewrite_to_sigstop_if_not_defined(int signum) {
-    if (signal_rewrite[signum] == 0)
+    if (signal_rewrite[signum] == -1)
         signal_rewrite[signum] = SIGSTOP;
 }
 
