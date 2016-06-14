@@ -116,6 +116,8 @@ different stop signal in order to do graceful cleanup.
 For example, to rewrite the signal SIGTERM (number 15) to SIGQUIT (number 3),
 just add `--rewrite 15:3` on the command line.
 
+To drop a signal entirely, you can rewrite it to the special number `0`.
+
 
 #### Signal rewriting special case
 

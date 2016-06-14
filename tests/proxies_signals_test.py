@@ -109,3 +109,21 @@ def test_default_rewrites_can_be_overriden_with_setsid_enabled():
             proc.send_signal(signal.SIGCONT)
             assert proc.stdout.readline() == '{0}\n'.format(signal.SIGCONT).encode('ascii')
             assert process_state(proc.pid) in ['running', 'sleeping']
+
+
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_ignored_signals_are_not_proxied():
+    """Ensure dumb-init can ignore signals."""
+    rewrite_map = {
+        signal.SIGTERM: signal.SIGQUIT,
+        signal.SIGINT: 0,
+        signal.SIGWINCH: 0,
+    }
+    with _print_signals(_rewrite_map_to_args(rewrite_map)) as proc:
+        proc.send_signal(signal.SIGTERM)
+        proc.send_signal(signal.SIGINT)
+        assert proc.stdout.readline() == '{0}\n'.format(signal.SIGQUIT).encode('ascii')
+
+        proc.send_signal(signal.SIGWINCH)
+        proc.send_signal(signal.SIGHUP)
+        assert proc.stdout.readline() == '{0}\n'.format(signal.SIGHUP).encode('ascii')

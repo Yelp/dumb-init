@@ -41,6 +41,8 @@ def test_help_message(flag, both_debug_modes, both_setsid_modes, current_version
         b'                        In this mode, signals are only proxied to the\n'
         b'                        direct child and not any of its descendants.\n'
         b'   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n'
+        b'                        To ignore (not proxy) a signal, rewrite it to 0.\n'
+        b'                        This option can be specified multiple times.\n'
         b'   -v, --verbose        Print debugging information to stderr.\n'
         b'   -h, --help           Print this help message and exit.\n'
         b'   -V, --version        Print the current version and exit.\n'
