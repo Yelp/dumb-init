@@ -1,5 +1,10 @@
+import os
 import re
 import signal
+import sys
+from contextlib import contextmanager
+from subprocess import PIPE
+from subprocess import Popen
 
 from py._path.local import LocalPath
 
@@ -16,6 +21,27 @@ NORMAL_SIGNALS = frozenset(
     set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD]) -
     SUSPEND_SIGNALS
 )
+
+
+@contextmanager
+def print_signals(args=()):
+    """Start print_signals and yield dumb-init process and print_signals PID."""
+    proc = Popen(
+        (
+            ('dumb-init',) +
+            tuple(args) +
+            (sys.executable, '-m', 'testing.print_signals')
+        ),
+        stdout=PIPE,
+    )
+    line = proc.stdout.readline()
+    m = re.match(b'^ready \(pid: ([0-9]+)\)\n$', line)
+    assert m, line
+
+    yield proc, m.group(1).decode('ascii')
+
+    for pid in pid_tree(proc.pid):
+        os.kill(pid, signal.SIGKILL)
 
 
 def child_pids(pid):

@@ -8,8 +8,8 @@ from subprocess import Popen
 
 import pytest
 
-from tests.lib.testing import is_alive
-from tests.lib.testing import pid_tree
+from testing import is_alive
+from testing import pid_tree
 
 
 def spawn_and_kill_pipeline():
@@ -34,7 +34,8 @@ def living_pids(pids):
     return set(pid for pid in pids if is_alive(pid))
 
 
-def test_setsid_signals_entire_group(both_debug_modes, setsid_enabled):
+@pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
+def test_setsid_signals_entire_group():
     """When dumb-init is running in setsid mode, it should only signal the
     entire process group rooted at it.
     """
@@ -42,10 +43,8 @@ def test_setsid_signals_entire_group(both_debug_modes, setsid_enabled):
     assert len(living_pids(pids)) == 0
 
 
-def test_no_setsid_doesnt_signal_entire_group(
-        both_debug_modes,
-        setsid_disabled,
-):
+@pytest.mark.usefixtures('both_debug_modes', 'setsid_disabled')
+def test_no_setsid_doesnt_signal_entire_group():
     """When dumb-init is not running in setsid mode, it should only signal its
     immediate child.
     """
@@ -73,7 +72,7 @@ def spawn_process_which_dies_with_children():
             # we need to sleep before the shell exits, or dumb-init might send
             # TERM to print_signals before it has had time to register custom
             # signal handlers
-            '{python} -m tests.lib.print_signals & sleep 0.1'.format(
+            '{python} -m testing.print_signals & sleep 0.1'.format(
                 python=sys.executable,
             ),
         ),
@@ -96,10 +95,8 @@ def spawn_process_which_dies_with_children():
     return child_pid, proc.stdout
 
 
-def test_all_processes_receive_term_on_exit_if_setsid(
-        both_debug_modes,
-        setsid_enabled,
-):
+@pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
+def test_all_processes_receive_term_on_exit_if_setsid():
     """If the child exits for some reason, dumb-init should send TERM to all
     processes in its session if setsid mode is enabled."""
     child_pid, child_stdout = spawn_process_which_dies_with_children()
@@ -110,10 +107,8 @@ def test_all_processes_receive_term_on_exit_if_setsid(
     os.kill(child_pid, signal.SIGKILL)
 
 
-def test_processes_dont_receive_term_on_exit_if_no_setsid(
-        both_debug_modes,
-        setsid_disabled,
-):
+@pytest.mark.usefixtures('both_debug_modes', 'setsid_disabled')
+def test_processes_dont_receive_term_on_exit_if_no_setsid():
     """If the child exits for some reason, dumb-init should not send TERM to
     any other processes if setsid mode is disabled."""
     child_pid, child_stdout = spawn_process_which_dies_with_children()
@@ -133,7 +128,8 @@ def test_processes_dont_receive_term_on_exit_if_no_setsid(
     ('-c', '/doesnotexist'),
     ('--single-child', '--', '/doesnotexist'),
 ])
-def test_fails_nonzero_with_bad_exec(args, both_debug_modes, both_setsid_modes):
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_fails_nonzero_with_bad_exec(args):
     """If dumb-init can't exec as requested, it should exit nonzero."""
     proc = Popen(('dumb-init',) + args, stderr=PIPE)
     proc.wait()

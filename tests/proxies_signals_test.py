@@ -1,42 +1,18 @@
 import os
-import re
 import signal
-import sys
-from contextlib import contextmanager
 from itertools import chain
-from subprocess import PIPE
-from subprocess import Popen
 
 import pytest
 
-from tests.lib.testing import NORMAL_SIGNALS
-from tests.lib.testing import pid_tree
-from tests.lib.testing import process_state
-
-
-@contextmanager
-def _print_signals(args=()):
-    """Start print_signals and return dumb-init process."""
-    proc = Popen(
-        (
-            ('dumb-init',) +
-            tuple(args) +
-            (sys.executable, '-m', 'tests.lib.print_signals')
-        ),
-        stdout=PIPE,
-    )
-    assert re.match(b'^ready \(pid: (?:[0-9]+)\)\n$', proc.stdout.readline())
-
-    yield proc
-
-    for pid in pid_tree(proc.pid):
-        os.kill(pid, signal.SIGKILL)
+from testing import NORMAL_SIGNALS
+from testing import print_signals
+from testing import process_state
 
 
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_proxies_signals():
     """Ensure dumb-init proxies regular signals to its child."""
-    with _print_signals() as proc:
+    with print_signals() as (proc, _):
         for signum in NORMAL_SIGNALS:
             proc.send_signal(signum)
             assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
@@ -81,7 +57,7 @@ def _rewrite_map_to_args(rewrite_map):
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_proxies_signals_with_rewrite(rewrite_map, sequence, expected):
     """Ensure dumb-init can rewrite signals."""
-    with _print_signals(_rewrite_map_to_args(rewrite_map)) as proc:
+    with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         for send, expect_receive in zip(sequence, expected):
             proc.send_signal(send)
             assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
@@ -97,7 +73,7 @@ def test_default_rewrites_can_be_overriden_with_setsid_enabled():
         signal.SIGTTOU: signal.SIGINT,
         signal.SIGTSTP: signal.SIGHUP,
     }
-    with _print_signals(_rewrite_map_to_args(rewrite_map)) as proc:
+    with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         for send, expect_receive in rewrite_map.items():
             assert process_state(proc.pid) in ['running', 'sleeping']
             proc.send_signal(send)
@@ -119,7 +95,7 @@ def test_ignored_signals_are_not_proxied():
         signal.SIGINT: 0,
         signal.SIGWINCH: 0,
     }
-    with _print_signals(_rewrite_map_to_args(rewrite_map)) as proc:
+    with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         proc.send_signal(signal.SIGTERM)
         proc.send_signal(signal.SIGINT)
         assert proc.stdout.readline() == '{0}\n'.format(signal.SIGQUIT).encode('ascii')
