@@ -1,3 +1,10 @@
+dumb-init (1.1.1) unstable; urgency=medium
+
+  * Fix segfault when passing unknown arguments (thanks @asottile for
+    noticing!) (#88).
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Fri, 17 Jun 2016 12:11:22 -0700
+
 dumb-init (1.1.0) unstable; urgency=medium
 
   * Add ability to rewrite incoming signals before proxying via the --rewrite
