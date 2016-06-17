@@ -26,7 +26,10 @@ def test_exits_invalid_with_invalid_args():
     proc = Popen(('dumb-init', '--yolo', '/bin/true'), stderr=PIPE)
     _, stderr = proc.communicate()
     assert proc.returncode == 1
-    assert stderr == b"dumb-init: unrecognized option '--yolo'\n"
+    assert stderr in (
+        b"dumb-init: unrecognized option '--yolo'\n",  # glibc
+        b'dumb-init: unrecognized option: yolo\n',  # musl
+    )
 
 
 @pytest.mark.parametrize('flag', ['-h', '--help'])
