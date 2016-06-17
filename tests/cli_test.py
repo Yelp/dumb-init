@@ -21,6 +21,14 @@ def test_no_arguments_prints_usage(both_debug_modes, both_setsid_modes):
     )
 
 
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_exits_invalid_with_invalid_args():
+    proc = Popen(('dumb-init', '--yolo', '/bin/true'), stderr=PIPE)
+    _, stderr = proc.communicate()
+    assert proc.returncode == 1
+    assert stderr == b"dumb-init: unrecognized option '--yolo'\n"
+
+
 @pytest.mark.parametrize('flag', ['-h', '--help'])
 def test_help_message(flag, both_debug_modes, both_setsid_modes, current_version):
     """dumb-init should say something useful when called with the help flag,
