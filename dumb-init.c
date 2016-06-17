@@ -173,6 +173,7 @@ char **parse_command(int argc, char *argv[]) {
         {"rewrite",      required_argument, NULL, 'r'},
         {"verbose",      no_argument,       NULL, 'v'},
         {"version",      no_argument,       NULL, 'V'},
+        {NULL,                     0,       NULL,   0},
     };
     while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
         switch (opt) {

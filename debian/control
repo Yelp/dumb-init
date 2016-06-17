@@ -8,9 +8,10 @@ Build-Depends:
  help2man,
  musl-tools,
 ## Tests:
+ procps,
  python,
- python-pytest,
  python-mock,
+ python-pytest,
 Standards-Version: 3.9.7
 Homepage: https://github.com/Yelp/dumb-init
 Vcs-Browser: https://github.com/Yelp/dumb-init
