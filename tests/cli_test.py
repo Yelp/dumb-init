@@ -11,7 +11,8 @@ def current_version():
     return open('VERSION').read().strip()
 
 
-def test_no_arguments_prints_usage(both_debug_modes, both_setsid_modes):
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_no_arguments_prints_usage():
     proc = Popen(('dumb-init'), stderr=PIPE)
     _, stderr = proc.communicate()
     assert proc.returncode != 0
@@ -33,7 +34,8 @@ def test_exits_invalid_with_invalid_args():
 
 
 @pytest.mark.parametrize('flag', ['-h', '--help'])
-def test_help_message(flag, both_debug_modes, both_setsid_modes, current_version):
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_help_message(flag, current_version):
     """dumb-init should say something useful when called with the help flag,
     and exit zero.
     """
@@ -63,7 +65,8 @@ def test_help_message(flag, both_debug_modes, both_setsid_modes, current_version
 
 
 @pytest.mark.parametrize('flag', ['-V', '--version'])
-def test_version_message(flag, both_debug_modes, both_setsid_modes, current_version):
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_version_message(flag, current_version):
     """dumb-init should print its version when asked to."""
 
     proc = Popen(('dumb-init', flag), stderr=PIPE)
