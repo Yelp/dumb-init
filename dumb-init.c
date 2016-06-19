@@ -46,7 +46,12 @@ int translate_signal(int signum) {
         return signum;
     } else {
         int translated = signal_rewrite[signum];
-        return translated == -1 ? signum : translated;
+        if (translated == -1) {
+            return signum;
+        } else {
+            DEBUG("Translating signal %d to %d.\n", signum, translated);
+            return translated;
+        }
     }
 }
 
