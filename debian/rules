@@ -31,5 +31,4 @@ override_dh_builddeb:
 override_dh_auto_test:
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -delete
-	PATH=.:$$PATH py.test tests/
-	ps aux
+	PATH=.:$$PATH timeout --signal=KILL 60 py.test -vv tests/
