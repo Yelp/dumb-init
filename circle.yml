@@ -14,5 +14,5 @@ dependencies:
 
 test:
     override:
-        - CI/circle:
+        - ci/circle:
             parallel: true

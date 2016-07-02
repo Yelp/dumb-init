@@ -1,0 +1,23 @@
+if grep -qE '\<lucid\>' /etc/apt/sources.list; then
+    # lucid was archived, breaking the base image
+    # https://github.com/docker-library/official-images/issues/1902
+    sed -i 's/archive\.ubuntu\.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+fi
+
+apt-get update
+apt-get install -y --no-install-recommends \
+    build-essential \
+    procps \
+    python \
+    python-dev \
+    python-pip \
+    python-setuptools
+
+pip install --upgrade pip
+hash -r
+pip --version
+
+cp -r /mnt/ /test
+cd /test
+
+# vim: ft=sh
