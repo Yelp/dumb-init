@@ -1,0 +1,21 @@
+#!/bin/bash -eux
+set -o pipefail
+
+. /mnt/ci/docker
+
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0x5BB92C09DB82666C
+echo 'deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu xenial main' >> /etc/apt/sources.list
+apt-get update
+apt-get install -y --no-install-recommends \
+    git \
+    python2.6-dev \
+    python2.7-dev \
+    python3.4-dev \
+    python3.5-dev
+
+# We cannot use the Ubuntu versions of tox or virtualenv:
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=754248
+pip install tox virtualenv
+hash -r
+
+tox

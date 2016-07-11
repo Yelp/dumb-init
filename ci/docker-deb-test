@@ -1,0 +1,11 @@
+#!/bin/bash -eux
+set -o pipefail
+
+. /mnt/ci/docker
+
+dpkg -i dist/*.deb
+pip install --upgrade setuptools distribute
+pip install -r requirements-dev.txt
+py.test tests/
+
+exec dumb-init /mnt/tests/test-zombies
