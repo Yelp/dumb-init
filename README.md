@@ -5,7 +5,7 @@ dumb-init
 [![PyPI version](https://badge.fury.io/py/dumb-init.svg)](https://pypi.python.org/pypi/dumb-init)
 
 
-`dumb-init` is a simple process supervisor and init system designed to run as
+**dumb-init** is a simple process supervisor and init system designed to run as
 PID 1 inside minimal container environments (such as [Docker][docker]). It is a
 deployed as a small, statically-linked binary written in C.
 
