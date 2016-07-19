@@ -92,7 +92,7 @@ def test_verbose(flag):
             b'\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
         ),
         stderr,
-    )
+    ), stderr
 
 
 @pytest.mark.parametrize('flag1', ['-v', '--verbose'])

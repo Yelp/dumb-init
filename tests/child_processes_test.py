@@ -2,7 +2,6 @@ import os
 import re
 import signal
 import sys
-import time
 from subprocess import PIPE
 from subprocess import Popen
 
@@ -10,6 +9,7 @@ import pytest
 
 from testing import is_alive
 from testing import pid_tree
+from testing import sleep_until
 
 
 def spawn_and_kill_pipeline():
@@ -18,15 +18,15 @@ def spawn_and_kill_pipeline():
         'sh', '-c',
         "yes 'oh, hi' | tail & yes error | tail >&2"
     ))
-    time.sleep(0.1)
+
+    def assert_living_pids():
+        assert len(living_pids(pid_tree(os.getpid()))) == 6
+
+    sleep_until(assert_living_pids)
 
     pids = pid_tree(os.getpid())
-    assert len(living_pids(pids)) == 6
-
     proc.send_signal(signal.SIGTERM)
     proc.wait()
-
-    time.sleep(0.1)
     return pids
 
 
@@ -36,11 +36,15 @@ def living_pids(pids):
 
 @pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
 def test_setsid_signals_entire_group():
-    """When dumb-init is running in setsid mode, it should only signal the
-    entire process group rooted at it.
+    """When dumb-init is running in setsid mode, it should signal the entire
+    process group rooted at it.
     """
     pids = spawn_and_kill_pipeline()
-    assert len(living_pids(pids)) == 0
+
+    def assert_no_living_pids():
+        assert len(living_pids(pids)) == 0
+
+    sleep_until(assert_no_living_pids)
 
 
 @pytest.mark.usefixtures('both_debug_modes', 'setsid_disabled')
@@ -50,9 +54,12 @@ def test_no_setsid_doesnt_signal_entire_group():
     """
     pids = spawn_and_kill_pipeline()
 
-    living = living_pids(pids)
-    assert len(living) == 4
-    for pid in living:
+    def assert_four_living_pids():
+        assert len(living_pids(pids)) == 4
+
+    sleep_until(assert_four_living_pids)
+
+    for pid in living_pids(pids):
         os.kill(pid, signal.SIGKILL)
 
 

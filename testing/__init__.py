@@ -2,6 +2,7 @@ import os
 import re
 import signal
 import sys
+import time
 from contextlib import contextmanager
 from subprocess import PIPE
 from subprocess import Popen
@@ -75,3 +76,19 @@ def process_state(pid):
     status = LocalPath('/proc').join(str(pid), 'status').read()
     m = re.search('^State:\s+[A-Z] \(([a-z]+)\)$', status, re.MULTILINE)
     return m.group(1)
+
+
+def sleep_until(fn, timeout=1.5):
+    """Sleep until fn succeeds, or we time out."""
+    interval = 0.01
+    so_far = 0
+    while True:
+        try:
+            fn()
+        except:
+            if so_far >= timeout:
+                raise
+        else:
+            break
+        time.sleep(interval)
+        so_far += interval
