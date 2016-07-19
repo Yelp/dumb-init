@@ -1,11 +1,11 @@
 import os
-import time
 from signal import SIGCONT
 
 import pytest
 
 from testing import print_signals
 from testing import process_state
+from testing import sleep_until
 from testing import SUSPEND_SIGNALS
 
 
@@ -23,17 +23,10 @@ def test_shell_background_support_setsid():
             # both should now suspend
             proc.send_signal(signum)
 
-            for _ in range(1000):
-                time.sleep(0.001)
-                try:
-                    assert process_state(proc.pid) == 'stopped'
-                    assert process_state(pid) == 'stopped'
-                except AssertionError:
-                    pass
-                else:
-                    break
-            else:
-                raise RuntimeError('Timed out waiting for processes to stop.')
+            def assert_both_stopped():
+                assert process_state(proc.pid) == process_state(pid) == 'stopped'
+
+            sleep_until(assert_both_stopped)
 
             # and then both wake up again
             proc.send_signal(SIGCONT)
