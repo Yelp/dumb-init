@@ -91,8 +91,7 @@ def spawn_process_which_dies_with_children():
     # read a line from print_signals, figure out its pid
     line = proc.stdout.readline()
     match = re.match(b'ready \(pid: ([0-9]+)\)\n', line)
-    assert match, 'print_signals should print "ready" and its pid, not ' + \
-        str(line)
+    assert match, line
     child_pid = int(match.group(1))
 
     # at this point, the shell and dumb-init have both exited, but
@@ -139,9 +138,9 @@ def test_processes_dont_receive_term_on_exit_if_no_setsid():
 def test_fails_nonzero_with_bad_exec(args):
     """If dumb-init can't exec as requested, it should exit nonzero."""
     proc = Popen(('dumb-init',) + args, stderr=PIPE)
-    proc.wait()
+    _, stderr = proc.communicate()
     assert proc.returncode != 0
     assert (
         b'[dumb-init] /doesnotexist: No such file or directory\n'
-        in proc.stderr
+        in stderr
     )
