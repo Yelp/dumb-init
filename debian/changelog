@@ -1,3 +1,12 @@
+dumb-init (1.1.2) unstable; urgency=low
+
+  * Fix race when the child exits very quickly that leads to dumb-init not
+    reaping the child. This should be pretty rare and most likely to happen
+    when dumb-init's child fails to exec (such as when you try to run a file
+    that doesn't exist).
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Mon, 25 Jul 2016 22:46:40 -0700
+
 dumb-init (1.1.1) unstable; urgency=medium
 
   * Fix segfault when passing unknown arguments (thanks @asottile for
