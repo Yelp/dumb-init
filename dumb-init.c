@@ -235,6 +235,9 @@ char **parse_command(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
     char **cmd = parse_command(argc, argv);
+    sigset_t all_signals;
+    sigfillset(&all_signals);
+    sigprocmask(SIG_BLOCK, &all_signals, NULL);
 
     child_pid = fork();
     if (child_pid < 0) {
@@ -242,6 +245,7 @@ int main(int argc, char *argv[]) {
         return 1;
     } else if (child_pid == 0) {
         /* child */
+        sigprocmask(SIG_UNBLOCK, &all_signals, NULL);
         if (use_setsid) {
             if (setsid() == -1) {
                 PRINTERR(
@@ -260,13 +264,9 @@ int main(int argc, char *argv[]) {
         return 2;
     } else {
         /* parent */
-        int signum;
-        sigset_t all_signals;
-        sigfillset(&all_signals);
-        sigprocmask(SIG_BLOCK, &all_signals, NULL);
-
         DEBUG("Child spawned with PID %d.\n", child_pid);
         for (;;) {
+            int signum;
             sigwait(&all_signals, &signum);
             handle_signal(signum);
         }
