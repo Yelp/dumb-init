@@ -157,7 +157,7 @@ If you don't have an internal apt server, you can use `dpkg -i` to install the
 
 One possibility is with the following commands in your Dockerfile:
 
-```bash
+```Dockerfile
 RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.1.2/dumb-init_1.1.2_amd64.deb
 RUN dpkg -i dumb-init_*.deb
 ```
@@ -168,7 +168,7 @@ RUN dpkg -i dumb-init_*.deb
 Since dumb-init is released as a statically-linked binary, you can usually just
 plop it into your images. Here's an example of doing that in a Dockerfile:
 
-```bash
+```Dockerfile
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.1.2/dumb-init_1.1.2_amd64
 RUN chmod +x /usr/local/bin/dumb-init
 ```
@@ -186,7 +186,22 @@ then just `pip install dumb-init`.
 ## Usage
 
 Once installed inside your Docker container, simply prefix your commands with
-`dumb-init`. For example:
+`dumb-init`.
+
+Within a Dockerfile, it's a good practice to use dumb-init as your container's
+entrypoint. An "entrypoint" is a partial command that gets prepended to your
+`CMD` instruction, making it a great fit for dumb-init:
+
+```Dockerfile
+# Runs "/usr/bin/dumb-init -- /my/script --with --args"
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/my/script", "--with", "--args"]
+```
+
+If you declare an entrypoint in a base image, any images that descend from it
+don't need to also declare dumb-init. They can just set a `CMD` as usual.
+
+For interactive one-off usage, you can just prepend it manually:
 
     $ docker run my_container dumb-init python -c 'while True: pass'
 
@@ -231,7 +246,7 @@ your machine.
 
 * [Docker and the PID 1 zombie reaping problem (Phusion Blog)](https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/)
 * [Trapping signals in Docker containers (@gchudnov)](https://medium.com/@gchudnov/trapping-signals-in-docker-containers-7a57fdda7d86)
-* [pgctl](https://github.com/Yelp/pgctl)
+* [tini](https://github.com/krallin/tini), an alterative to dumb-init
 
 
 [daemontools]: http://cr.yp.to/daemontools.html
