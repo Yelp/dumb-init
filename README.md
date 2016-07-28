@@ -157,7 +157,7 @@ If you don't have an internal apt server, you can use `dpkg -i` to install the
 
 One possibility is with the following commands in your Dockerfile:
 
-```bash
+```Dockerfile
 RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.1.2/dumb-init_1.1.2_amd64.deb
 RUN dpkg -i dumb-init_*.deb
 ```
@@ -168,7 +168,7 @@ RUN dpkg -i dumb-init_*.deb
 Since dumb-init is released as a statically-linked binary, you can usually just
 plop it into your images. Here's an example of doing that in a Dockerfile:
 
-```bash
+```Dockerfile
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.1.2/dumb-init_1.1.2_amd64
 RUN chmod +x /usr/local/bin/dumb-init
 ```
@@ -192,7 +192,7 @@ Within a Dockerfile, it's a good practice to use dumb-init as your container's
 entrypoint. An "entrypoint" is a partial command that gets prepended to your
 `CMD` instruction, making it a great fit for dumb-init:
 
-```bash
+```Dockerfile
 # Runs "/usr/bin/dumb-init -- /my/script --with --args"
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/my/script", "--with", "--args"]
