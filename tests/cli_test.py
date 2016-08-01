@@ -1,5 +1,6 @@
 """Sanity checks for command-line options."""
 import re
+import signal
 from subprocess import PIPE
 from subprocess import Popen
 
@@ -87,13 +88,13 @@ def test_verbose(flag):
     assert re.search(b'(^|\n)\[dumb-init\] setsid complete\.\n', stderr), stderr  # child
     assert re.search(  # parent
         (
-            b'(^|\n)\[dumb-init\] Child spawned with PID [0-9]+\.\n'
-            b'.*'  # child might print here
-            b'\[dumb-init\] Received signal 17\.\n'
-            b'\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
-            b'\[dumb-init\] Forwarded signal 15 to children\.\n'
-            b'\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
-        ),
+            '(^|\n)\[dumb-init\] Child spawned with PID [0-9]+\.\n'
+            '.*'  # child might print here
+            '\[dumb-init\] Received signal {signal.SIGCHLD}\.\n'
+            '\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
+            '\[dumb-init\] Forwarded signal 15 to children\.\n'
+            '\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
+        ).format(signal=signal).encode('utf8'),
         stderr,
         re.DOTALL,
     ), stderr
@@ -109,12 +110,12 @@ def test_verbose_and_single_child(flag1, flag2):
     assert stdout == b'oh, hi\n'
     assert re.match(
         (
-            b'^\[dumb-init\] Child spawned with PID [0-9]+\.\n'
-            b'\[dumb-init\] Received signal 17\.\n'
-            b'\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
-            b'\[dumb-init\] Forwarded signal 15 to children\.\n'
-            b'\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
-        ),
+            '^\[dumb-init\] Child spawned with PID [0-9]+\.\n'
+            '\[dumb-init\] Received signal {signal.SIGCHLD}\.\n'
+            '\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
+            '\[dumb-init\] Forwarded signal 15 to children\.\n'
+            '\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
+        ).format(signal=signal).encode('utf8'),
         stderr,
     )
 
