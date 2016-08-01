@@ -1,3 +1,4 @@
+import errno
 import os
 import re
 import signal
@@ -92,3 +93,12 @@ def sleep_until(fn, timeout=1.5):
             break
         time.sleep(interval)
         so_far += interval
+
+
+def kill_if_alive(pid, signum=signal.SIGKILL):
+    """Kill a process, ignoring "no such process" errors."""
+    try:
+        os.kill(pid, signum)
+    except OSError as ex:
+        if ex.errno != errno.ESRCH:  # No such process
+            raise
