@@ -48,13 +48,17 @@ def print_signals(args=()):
 
 def child_pids(pid):
     """Return a list of direct child PIDs for the given PID."""
-    pid = str(pid)
-    tasks = LocalPath('/proc').join(pid, 'task').listdir()
-    return set(
-        int(child_pid)
-        for task in tasks
-        for child_pid in task.join('children').read().split()
-    )
+    children = set()
+    for p in LocalPath('/proc').listdir():
+        stat = p.join('stat')
+        if stat.isfile():
+            stat = stat.open().read()
+            m = re.match('^\d+ \([^\)]+\) [a-zA-Z] (\d+) ', stat)
+            assert m, stat
+            ppid = int(m.group(1))
+            if ppid == pid:
+                children.add(int(p.basename))
+    return children
 
 
 def pid_tree(pid):
