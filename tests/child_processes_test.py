@@ -8,6 +8,7 @@ from subprocess import Popen
 import pytest
 
 from testing import is_alive
+from testing import kill_if_alive
 from testing import pid_tree
 from testing import sleep_until
 
@@ -60,7 +61,7 @@ def test_no_setsid_doesnt_signal_entire_group():
     sleep_until(assert_four_living_pids)
 
     for pid in living_pids(pids):
-        os.kill(pid, signal.SIGKILL)
+        kill_if_alive(pid)
 
 
 def spawn_process_which_dies_with_children():
