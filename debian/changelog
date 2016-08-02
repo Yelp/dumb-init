@@ -1,3 +1,10 @@
+dumb-init (1.1.3) unstable; urgency=low
+
+  * Add support for FreeBSD kernel. Thanks @onlyjob for bringing this to our
+    attention.
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Tue, 02 Aug 2016 10:57:11 -0700
+
 dumb-init (1.1.2) unstable; urgency=low
 
   * Fix race when the child exits very quickly that leads to dumb-init not
