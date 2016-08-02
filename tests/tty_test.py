@@ -29,7 +29,7 @@ def readall(fd):
                 return result
             else:
                 raise
-        if chunk == '':
+        if chunk == b'':
             return result
         else:
             result += chunk

@@ -32,6 +32,7 @@
 
 // Signals we care about are numbered from 1 to 31, inclusive.
 // (32 and above are real-time signals.)
+// TODO: this is likely not portable outside of Linux, or on strange architectures
 #define MAXSIG 31
 
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
@@ -233,11 +234,21 @@ char **parse_command(int argc, char *argv[]) {
     return &argv[optind];
 }
 
+// A dummy signal handler used for signals we care about.
+// On the FreeBSD kernel, ignored signals cannot be waited on by `sigwait` (but
+// they can be on Linux). We must provide a dummy handler.
+// https://lists.freebsd.org/pipermail/freebsd-ports/2009-October/057340.html
+void dummy(int signum) {}
+
 int main(int argc, char *argv[]) {
     char **cmd = parse_command(argc, argv);
     sigset_t all_signals;
     sigfillset(&all_signals);
     sigprocmask(SIG_BLOCK, &all_signals, NULL);
+
+    int i = 0;
+    for (i = 1; i <= MAXSIG; i++)
+        signal(i, dummy);
 
     child_pid = fork();
     if (child_pid < 0) {
