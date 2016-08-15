@@ -1,11 +1,11 @@
 Name:           dumb-init
 Version:        1.1.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Entry-point for containers that proxies signals
 
 License:        MIT
 URL:            https://github.com/Yelp/dumb-init
-Source0:        https://github.com/Yelp/dumb-init/archive/v1.1.3.tar.gz
+Source0:        https://github.com/Yelp/dumb-init/archive/v%{version}.tar.gz
 
 BuildRequires:  vim-common
 BuildRequires:  help2man
@@ -42,5 +42,5 @@ cp %{name}.1.gz "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
 
 
 %changelog
-* Mon Aug 15 2016 alsadi <alsadi@gmail.com> - 1.1.3-1
+* Mon Aug 15 2016 alsadi <alsadi@gmail.com> - 1.1.3-2
 - initial packaging
