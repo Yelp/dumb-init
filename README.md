@@ -186,7 +186,8 @@ then just `pip install dumb-init`.
 ## Usage
 
 Once installed inside your Docker container, simply prefix your commands with
-`dumb-init`.
+`dumb-init` (and make sure that you're using [the recommended JSON
+syntax][docker-cmd-json]).
 
 Within a Dockerfile, it's a good practice to use dumb-init as your container's
 entrypoint. An "entrypoint" is a partial command that gets prepended to your
@@ -208,6 +209,10 @@ For interactive one-off usage, you can just prepend it manually:
 Running this same command without `dumb-init` would result in being unable to
 stop the container without `SIGKILL`, but with `dumb-init`, you can send it
 more humane signals like `SIGTERM`.
+
+It's important that you use [the JSON syntax][docker-cmd-json] for `CMD` and
+`ENTRYPOINT`. Otherwise, Docker invokes a shell to run your command, resulting
+in the shell as PID 1 instead of dumb-init.
 
 
 ## Building dumb-init
@@ -255,3 +260,4 @@ your machine.
 [systemd]: https://wiki.freedesktop.org/www/Software/systemd/
 [sysvinit]: https://wiki.archlinux.org/index.php/SysVinit
 [docker]: https://www.docker.com/
+[docker-cmd-json]: https://docs.docker.com/engine/reference/builder/#run
