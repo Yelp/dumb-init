@@ -1,6 +1,6 @@
 Name:           dumb-init
 Version:        1.1.3
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Entry-point for containers that proxies signals
 
 License:        MIT
@@ -37,11 +37,14 @@ install -Dpm0644 %{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
 
 %files
 %{_bindir}/%{name}
+%{_mandir}/man1/%{name}.1*
 %license LICENSE
 %doc README.md
-%doc %{_mandir}/man1/%{name}.1*
 
 %changelog
+* Wed Aug 17 2016 Muayyad Alsadi <alsadi@gmail.com> - 1.1.3-7
+- let manpage automatically marked as document
+
 * Wed Aug 17 2016 Muayyad Alsadi <alsadi@gmail.com> - 1.1.3-6
 - remove gzip after help2man
 - add missing BuildRequire
