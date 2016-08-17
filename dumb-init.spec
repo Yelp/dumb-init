@@ -1,15 +1,17 @@
 Name:           dumb-init
 Version:        1.1.3
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Entry-point for containers that proxies signals
 
 License:        MIT
 URL:            https://github.com/Yelp/dumb-init
-Source0:        https://github.com/Yelp/dumb-init/archive/v%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+
+BuildRequires: gcc
+BuildRequires:  help2man
 
 # /bin/xxd of vim-common of is needed for non-released versions
 # BuildRequires:  vim-common
-BuildRequires:  help2man
 
 %description
 dumb-init is a simple process supervisor and init system designed to run as
@@ -22,23 +24,28 @@ PID 1 inside minimal container environments (such as Docker).
 %setup -q 
 
 %build
+
 # uncomment next line when building a non-released version
 # make VERSION.h 
+
 gcc -std=gnu99 %{optflags} -o %{name} dumb-init.c 
-help2man --no-discard-stderr --include debian/help2man --no-info --name '%{summary}' ./%{name} | gzip -9 > %{name}.1.gz
+help2man --no-discard-stderr --include debian/help2man --no-info --name '%{summary}' ./%{name} > %{name}.1
 
 %install
-mkdir -p "${RPM_BUILD_ROOT}/%{_bindir}" "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
-install -pm 755 %{name} "${RPM_BUILD_ROOT}/%{_bindir}/"
-install -pm 644 %{name}.1.gz "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
+install -Dpm0755 %{name} %{buildroot}%{_bindir}/%{name}
+install -Dpm0644 %{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
 
 %files
 %{_bindir}/%{name}
 %license LICENSE
 %doc README.md
-%{_mandir}/man1/%{name}.1.gz
+%doc %{_mandir}/man/%{name}.1*
 
 %changelog
+* Wed Aug 17 2016 Muayyad Alsadi <alsadi@gmail.com> - 1.1.3-5
+- remove gzip after help2man
+- add missing BuildRequire
+
 * Wed Aug 17 2016 Muayyad Alsadi <alsadi@gmail.com> - 1.1.3-4
 - install 644 for manpage
 
