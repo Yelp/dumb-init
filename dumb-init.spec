@@ -30,7 +30,7 @@ help2man --no-discard-stderr --include debian/help2man --no-info --name '%{summa
 %install
 mkdir -p "${RPM_BUILD_ROOT}/%{_bindir}" "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
 install -pm 755 %{name} "${RPM_BUILD_ROOT}/%{_bindir}/"
-install -pm 755 %{name}.1.gz "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
+install -pm 644 %{name}.1.gz "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
 
 %files
 %{_bindir}/%{name}
