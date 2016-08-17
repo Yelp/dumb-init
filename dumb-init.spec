@@ -1,6 +1,6 @@
 Name:           dumb-init
 Version:        1.1.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Entry-point for containers that proxies signals
 
 License:        MIT
@@ -39,6 +39,9 @@ install -pm 644 %{name}.1.gz "${RPM_BUILD_ROOT}/%{_mandir}/man1/"
 %{_mandir}/man1/%{name}.1.gz
 
 %changelog
+* Wed Aug 17 2016 Muayyad Alsadi <alsadi@gmail.com> - 1.1.3-4
+- install 644 for manpage
+
 * Wed Aug 17 2016 Muayyad Alsadi <alsadi@gmail.com> - 1.1.3-3
 - remove vim-common and use install
 
