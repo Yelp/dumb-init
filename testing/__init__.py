@@ -53,7 +53,7 @@ def child_pids(pid):
         stat = p.join('stat')
         if stat.isfile():
             stat = stat.open().read()
-            m = re.match('^\d+ \([^\)]+\) [a-zA-Z] (\d+) ', stat)
+            m = re.match('^\d+ \(.+?\) [a-zA-Z] (\d+) ', stat)
             assert m, stat
             ppid = int(m.group(1))
             if ppid == pid:
