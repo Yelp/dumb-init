@@ -50,14 +50,17 @@ def child_pids(pid):
     """Return a list of direct child PIDs for the given PID."""
     children = set()
     for p in LocalPath('/proc').listdir():
-        stat = p.join('stat')
-        if stat.isfile():
-            stat = stat.open().read()
+        try:
+            stat = open(p.join('stat').strpath).read()
             m = re.match('^\d+ \(.+?\) [a-zA-Z] (\d+) ', stat)
             assert m, stat
             ppid = int(m.group(1))
             if ppid == pid:
                 children.add(int(p.basename))
+        except IOError:
+            # Happens when the process exits after listing it, or between
+            # opening stat and reading it.
+            pass
     return children
 
 
