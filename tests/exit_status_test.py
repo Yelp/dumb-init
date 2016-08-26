@@ -1,3 +1,4 @@
+import distutils.spawn
 import signal
 from subprocess import Popen
 
@@ -26,6 +27,11 @@ def test_exit_status_terminated_by_signal(signal):
     """dumb-init should exit with status 128 + signal when the child process is
     terminated by a signal.
     """
-    proc = Popen(('dumb-init', 'sh', '-c', 'kill -{0} $$'.format(signal)))
+    # We need to make sure not to use the built-in kill (if on Bash):
+    # https://github.com/Yelp/dumb-init/issues/115
+    proc = Popen(('dumb-init', 'sh', '-c', '{0} -{1} $$'.format(
+        distutils.spawn.find_executable('kill'),
+        signal,
+    )))
     proc.wait()
     assert proc.returncode == 128 + signal
