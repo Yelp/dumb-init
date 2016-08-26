@@ -1,5 +1,5 @@
-import distutils.spawn
 import signal
+import sys
 from subprocess import Popen
 
 import pytest
@@ -18,7 +18,7 @@ def test_exit_status_regular_exit(exit_status):
 
 @pytest.mark.parametrize('signal', [
     signal.SIGTERM,
-    signal.SIGINT,
+    signal.SIGHUP,
     signal.SIGQUIT,
     signal.SIGKILL,
 ])
@@ -27,10 +27,9 @@ def test_exit_status_terminated_by_signal(signal):
     """dumb-init should exit with status 128 + signal when the child process is
     terminated by a signal.
     """
-    # We need to make sure not to use the built-in kill (if on Bash):
+    # We use Python because sh is "dash" on Debian and "bash" on others.
     # https://github.com/Yelp/dumb-init/issues/115
-    proc = Popen(('dumb-init', 'sh', '-c', '{0} -{1} $$'.format(
-        distutils.spawn.find_executable('kill'),
+    proc = Popen(('dumb-init', sys.executable, '-c', 'import os; os.kill(os.getpid(), {0})'.format(
         signal,
     )))
     proc.wait()
