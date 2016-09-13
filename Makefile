@@ -55,6 +55,7 @@ docker-image:
 .PHONY: test
 test:
 	tox
+	tox -e pre-commit
 
 .PHONY: install-hooks
 install-hooks:
