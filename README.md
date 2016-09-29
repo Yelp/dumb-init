@@ -251,7 +251,7 @@ your machine.
 
 * [Docker and the PID 1 zombie reaping problem (Phusion Blog)](https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/)
 * [Trapping signals in Docker containers (@gchudnov)](https://medium.com/@gchudnov/trapping-signals-in-docker-containers-7a57fdda7d86)
-* [tini](https://github.com/krallin/tini), an alterative to dumb-init
+* [tini](https://github.com/krallin/tini), an alternative to dumb-init
 
 
 [daemontools]: http://cr.yp.to/daemontools.html
