@@ -1,3 +1,16 @@
+dumb-init (1.2.0) unstable; urgency=medium
+
+  * Hand the controlling TTY to the child process, if we have one (#122).
+
+    This fixes warnings that are printed when running a typical command like:
+        docker run -ti <image> dumb-init bash
+    ...as well as allowing you to use job control.
+
+    Thanks to @ehlers for the patch, and @alhafoudh (and several others) for
+    reporting the issue and providing details!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Mon, 10 Oct 2016 14:09:57 -0700
+
 dumb-init (1.1.3) unstable; urgency=low
 
   * Add support for FreeBSD kernel. Thanks @onlyjob for bringing this to our
