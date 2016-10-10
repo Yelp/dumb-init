@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
         signal(i, dummy);
 
     /* detach dumb-init from controlling tty */
-    if (use_setsid && ioctl(0, TIOCNOTTY, NULL) == -1) {
+    if (use_setsid && ioctl(STDIN_FILENO, TIOCNOTTY) == -1) {
         DEBUG(
             "Unable to detach from controlling tty (errno=%d %s).\n",
             errno,
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
 
-            if (ioctl(0, TIOCSCTTY, NULL) == -1) {
+            if (ioctl(STDIN_FILENO, TIOCSCTTY, 0) == -1) {
                 DEBUG(
                     "Unable to attach to controlling tty (errno=%d %s).\n",
                     errno,
