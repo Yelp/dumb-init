@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -250,6 +251,15 @@ int main(int argc, char *argv[]) {
     for (i = 1; i <= MAXSIG; i++)
         signal(i, dummy);
 
+    /* detach dumb-init from controlling tty */
+    if (use_setsid && ioctl(0, TIOCNOTTY, NULL) == -1) {
+        DEBUG(
+            "Unable to detach from controlling tty (errno=%d %s).\n",
+            errno,
+            strerror(errno)
+        );
+    }
+
     child_pid = fork();
     if (child_pid < 0) {
         PRINTERR("Unable to fork. Exiting.\n");
@@ -265,6 +275,14 @@ int main(int argc, char *argv[]) {
                     strerror(errno)
                 );
                 exit(1);
+            }
+
+            if (ioctl(0, TIOCSCTTY, NULL) == -1) {
+                DEBUG(
+                    "Unable to attach to controlling tty (errno=%d %s).\n",
+                    errno,
+                    strerror(errno)
+                );
             }
             DEBUG("setsid complete.\n");
         }
