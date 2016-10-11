@@ -64,7 +64,7 @@ def test_child_gets_controlling_tty_if_we_had_one():
     """
     pid, sfd = pty.fork()
     if pid == 0:
-        os.execvpe('dumb-init', ('dumb-init', 'bash', '-m'), {})
+        os.execvp('dumb-init', ('dumb-init', 'bash', '-m'))
     else:
         ttyflags(sfd)
 
