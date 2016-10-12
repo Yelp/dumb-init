@@ -6,7 +6,7 @@ dumb-init
 
 
 **dumb-init** is a simple process supervisor and init system designed to run as
-PID 1 inside minimal container environments (such as [Docker][docker]). It is a
+PID 1 inside minimal container environments (such as [Docker][docker]). It is
 deployed as a small, statically-linked binary written in C.
 
 Lightweight containers have popularized the idea of running a single process or
