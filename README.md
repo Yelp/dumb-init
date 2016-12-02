@@ -194,8 +194,8 @@ entrypoint. An "entrypoint" is a partial command that gets prepended to your
 `CMD` instruction, making it a great fit for dumb-init:
 
 ```Dockerfile
-# Runs "/usr/bin/dumb-init -- /my/script --with --args"
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+# Runs "/usr/local/bin/dumb-init -- /my/script --with --args"
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["/my/script", "--with", "--args"]
 ```
 
