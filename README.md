@@ -196,6 +196,10 @@ entrypoint. An "entrypoint" is a partial command that gets prepended to your
 ```Dockerfile
 # Runs "/usr/bin/dumb-init -- /my/script --with --args"
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# or if you use --rewrite or other cli flags
+# ENTRYPOINT ["dumb-init", "--rewrite", "2:3", "--"]
+
 CMD ["/my/script", "--with", "--args"]
 ```
 
