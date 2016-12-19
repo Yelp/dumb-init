@@ -23,7 +23,7 @@ clean-tox:
 	rm -rf .tox
 
 .PHONY: release
-release: sdist builddeb-docker
+release: python-dists builddeb-docker
 	$(eval VERSION := $(shell cat VERSION))
 	# extract the built binary from the Debian package
 	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_amd64.deb | \
@@ -33,9 +33,17 @@ release: sdist builddeb-docker
 		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
 		> sha256sums
 
-.PHONY: sdist
-sdist: VERSION.h
+.PHONY: python-dists
+python-dists: VERSION.h
 	python setup.py sdist
+	docker run \
+		--user $$(id -u):$$(id -g) \
+		-v $(PWD)/dist:/dist:rw \
+		quay.io/pypa/manylinux1_x86_64:latest \
+		bash -exc ' \
+			/opt/python/cp35-cp35m/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
+		'
 
 .PHONY: builddeb
 builddeb:
