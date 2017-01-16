@@ -109,7 +109,7 @@ dumb-init echo 'oh, hi'`).
 ### Signal rewriting
 
 dumb-init allows rewriting incoming signals before proxying them. This is
-useful in cases where you have a Docker supervisor (like Mesos or Kubernates)
+useful in cases where you have a Docker supervisor (like Mesos or Kubernetes)
 which always sends a standard signal (e.g. SIGTERM). Some apps require a
 different stop signal in order to do graceful cleanup.
 
