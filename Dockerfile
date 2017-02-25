@@ -2,6 +2,11 @@ FROM debian:stretch
 
 MAINTAINER Chris Kuehl <ckuehl@yelp.com>
 
+# The default mirrors are too flaky to run reliably in CI.
+RUN sed -E \
+    '/security\.debian/! s@http://[^/]+/@http://mirrors.kernel.org/@' \
+    -i /etc/apt/sources.list
+
 # Install the bare minimum dependencies necessary for working with Debian
 # packages. Build dependencies should be added under "Build-Depends" inside
 # debian/control instead.
