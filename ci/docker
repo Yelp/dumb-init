@@ -2,6 +2,11 @@ if grep -qE '\<lucid\>' /etc/apt/sources.list; then
     # lucid was archived, breaking the base image
     # https://github.com/docker-library/official-images/issues/1902
     sed -i 's/archive\.ubuntu\.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+else
+    # The default mirrors are too flaky to run reliably in CI.
+    sed -E \
+        '/security\.debian/! s@http://[^/]+/@http://mirrors.kernel.org/@' \
+        -i /etc/apt/sources.list
 fi
 
 apt-get update
