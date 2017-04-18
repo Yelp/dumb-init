@@ -10,7 +10,7 @@ PID 1 inside minimal container environments (such as [Docker][docker]). It is
 deployed as a small, statically-linked binary written in C.
 
 Lightweight containers have popularized the idea of running a single process or
-service without normal init systems like [systemd][systemd] or
+service without normal init systems like [systemd][systemd], [OpenRC][openrc] or
 [sysvinit][sysvinit]. However, omitting an init system often leads to incorrect
 handling of processes and signals, and can result in problems such as
 containers which can't be gracefully stopped, or leaking containers which
@@ -263,5 +263,6 @@ your machine.
 [gh-releases]: https://github.com/Yelp/dumb-init/releases
 [systemd]: https://wiki.freedesktop.org/www/Software/systemd/
 [sysvinit]: https://wiki.archlinux.org/index.php/SysVinit
+[openrc]: https://wiki.gentoo.org/wiki/OpenRC
 [docker]: https://www.docker.com/
 [docker-cmd-json]: https://docs.docker.com/engine/reference/builder/#run
