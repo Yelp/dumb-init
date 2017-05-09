@@ -219,6 +219,27 @@ It's important that you use [the JSON syntax][docker-cmd-json] for `CMD` and
 in the shell as PID 1 instead of dumb-init.
 
 
+### Using a shell for pre-start hooks
+
+Often containers want to do some pre-start work which can't be done during
+build time. For example, you might want to template out some config files based
+on environment variables.
+
+The best way to integrate that with dumb-init is like this:
+
+```Dockerfile
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["bash", "-c", "do-some-pre-start-thing && exec my-server"]
+```
+
+By still using dumb-init as the entrypoint, you always have a proper init
+system in place.
+
+The `exec` portion of the bash command is important because it [replaces the
+bash process][exec] with your server, so that the shell only exists momentarily
+at start.
+
+
 ## Building dumb-init
 
 Building the dumb-init binary requires a working compiler and libc headers and
@@ -259,9 +280,10 @@ your machine.
 
 
 [daemontools]: http://cr.yp.to/daemontools.html
-[supervisord]: http://supervisord.org/
+[docker-cmd-json]: https://docs.docker.com/engine/reference/builder/#run
+[docker]: https://www.docker.com/
+[exec]: https://en.wikipedia.org/wiki/Exec_(system_call)
 [gh-releases]: https://github.com/Yelp/dumb-init/releases
+[supervisord]: http://supervisord.org/
 [systemd]: https://wiki.freedesktop.org/www/Software/systemd/
 [sysvinit]: https://wiki.archlinux.org/index.php/SysVinit
-[docker]: https://www.docker.com/
-[docker-cmd-json]: https://docs.docker.com/engine/reference/builder/#run
