@@ -182,7 +182,7 @@ PyPI](https://pypi.python.org/pypi/dumb-init) using `pip`. You'll want to first
 install a C compiler (on Debian/Ubuntu, `apt-get install gcc` is sufficient),
 then just `pip install dumb-init`.
 
-As of 1.2.0, the package at PyPI is available as a pre-built wheel archive and does not 
+As of 1.2.0, the package at PyPI is available as a pre-built wheel archive and does not
 need to be compiled on common distributions.
 
 
