@@ -178,9 +178,12 @@ RUN chmod +x /usr/local/bin/dumb-init
 
 Though `dumb-init` is written entirely in C, we also provide a Python package
 which compiles and installs the binary. It can be installed [from
-PyPI](https://pypi.python.org/pypi/dumb-init) using pip. You'll want to first
+PyPI](https://pypi.python.org/pypi/dumb-init) using `pip`. You'll want to first
 install a C compiler (on Debian/Ubuntu, `apt-get install gcc` is sufficient),
 then just `pip install dumb-init`.
+
+As of 1.2.0, the package at PyPI is available as a pre-built wheel archive and does not 
+need to be compiled on common distributions.
 
 
 ## Usage
