@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import os
 import sys
-from math import ceil
 from subprocess import call
 
 BOLD = '\033[1m'
