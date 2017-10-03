@@ -14,8 +14,6 @@ YELLOW = '\033[33m'
 RESET = '\033[0m'
 
 TARGETS = [
-    'itest_lucid',
-    'itest_precise',
     'itest_trusty',
     'itest_xenial',
     'itest_wheezy',
