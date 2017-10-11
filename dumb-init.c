@@ -59,7 +59,7 @@ int translate_signal(int signum) {
 
 void forward_signal(int signum) {
     signum = translate_signal(signum);
-    if (signum != -1) {
+    if (signum != 0) {
         kill(use_setsid ? -child_pid : child_pid, signum);
         DEBUG("Forwarded signal %d to children.\n", signum);
     } else {
