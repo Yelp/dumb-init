@@ -1,9 +1,11 @@
-dumb-init
-dist/
 *.deb
 *.egg-info
-.tox
-build/
-__pycache__/
+*.gc*
+*.o
 *.py[cod]
 .cache
+.tox
+__pycache__/
+build/
+dist/
+dumb-init
