@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+gcov -f dumb-init.c
+grep '#####' dumb-init.c.gcov | cut -d':' -f2 | xargs echo "Missing:"

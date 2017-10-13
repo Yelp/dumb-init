@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+envbindir="$1"
+cc -c dumb-init.c -o dumb-init.o -g --coverage
+cc dumb-init.o -o "${envbindir}/dumb-init" -g --coverage
