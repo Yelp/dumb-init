@@ -1,6 +1,6 @@
 FROM debian:stretch
 
-MAINTAINER Chris Kuehl <ckuehl@yelp.com>
+LABEL maintainer="Chris Kuehl <ckuehl@yelp.com>"
 
 # The default mirrors are too flaky to run reliably in CI.
 RUN sed -E \
