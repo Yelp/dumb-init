@@ -16,7 +16,6 @@ RESET = '\033[0m'
 TARGETS = [
     'itest_trusty',
     'itest_xenial',
-    'itest_wheezy',
     'itest_jessie',
     'itest_stretch',
     'itest_tox',
