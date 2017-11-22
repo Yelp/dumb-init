@@ -93,7 +93,7 @@ def sleep_until(fn, timeout=1.5):
     while True:
         try:
             fn()
-        except:
+        except Exception:
             if so_far >= timeout:
                 raise
         else:
