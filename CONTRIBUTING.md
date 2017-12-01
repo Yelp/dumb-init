@@ -29,8 +29,8 @@ The process to release a new version is:
 4. Run `make release`
 5. Commit the changes and tag the commit like `v1.0.0`.
 6. `git push --tags origin master`
-7. Run `twine upload --skip-existing dist/*.tar.gz` to upload the new version
-   to PyPI
+7. Run `twine upload --skip-existing dist/*.tar.gz dist/*.whl` to upload the
+   new version to PyPI
 8. Upload the resulting Debian package, binary (inside the `dist` directory),
    and sha256sums file to a new [GitHub
    release](https://github.com/Yelp/dumb-init/releases)
