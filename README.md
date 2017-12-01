@@ -158,7 +158,7 @@ If you don't have an internal apt server, you can use `dpkg -i` to install the
 One possibility is with the following commands in your Dockerfile:
 
 ```Dockerfile
-RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64.deb
+RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64.deb
 RUN dpkg -i dumb-init_*.deb
 ```
 
@@ -169,7 +169,7 @@ Since dumb-init is released as a statically-linked binary, you can usually just
 plop it into your images. Here's an example of doing that in a Dockerfile:
 
 ```Dockerfile
-RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64
 RUN chmod +x /usr/local/bin/dumb-init
 ```
 
@@ -183,7 +183,7 @@ install a C compiler (on Debian/Ubuntu, `apt-get install gcc` is sufficient),
 then just `pip install dumb-init`.
 
 As of 1.2.0, the package at PyPI is available as a pre-built wheel archive and does not
-need to be compiled on common distributions.
+need to be compiled on common Linux distributions.
 
 
 ## Usage

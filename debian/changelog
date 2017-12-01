@@ -1,3 +1,16 @@
+dumb-init (1.2.1) unstable; urgency=medium
+
+  * Fix verbose debug logging for ignored signals.
+
+    Before this patch, they were reported in the verbose log as "forwarded
+    signal 0 to children" instead of "not forwarding signal to children".
+
+    Since signal 0 is a noop, there is no actual behavior change here.
+
+    Thanks @kpengboy for the patch!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Fri, 01 Dec 2017 10:00:27 -0800
+
 dumb-init (1.2.0) unstable; urgency=medium
 
   * Hand the controlling TTY to the child process, if we have one (#122).
