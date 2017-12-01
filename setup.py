@@ -1,4 +1,8 @@
+from __future__ import print_function
+
 import os.path
+import subprocess
+import tempfile
 from distutils.command.build import build as orig_build
 from distutils.core import Command
 
@@ -84,16 +88,26 @@ class build_cexe(Command):
 
         compiler = new_compiler(verbose=True)
 
+        print('supports -static... ', end='')
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.c') as f:
+            f.write('int main(void){}\n')
+            f.flush()
+            cmd = compiler.linker_exe + [f.name, '-static', '-o', os.devnull]
+            with open(os.devnull, 'wb') as devnull:
+                if not subprocess.call(cmd, stderr=devnull):
+                    print('yes')
+                    link_args = ['-static']
+                else:
+                    print('no')
+                    link_args = []
+
         for exe in self.distribution.c_executables:
-            objects = compiler.compile(
-                exe.sources,
-                output_dir=self.build_temp,
-            )
+            objects = compiler.compile(exe.sources, output_dir=self.build_temp)
             compiler.link_executable(
                 objects,
                 exe.name,
                 output_dir=self.build_scripts,
-                extra_postargs=exe.extra_link_args,
+                extra_postargs=link_args,
             )
 
     def get_outputs(self):
@@ -110,13 +124,7 @@ setup(
     author='Yelp',
     url='https://github.com/Yelp/dumb-init/',
     platforms='linux',
-    c_executables=[
-        Extension(
-            'dumb-init',
-            ['dumb-init.c'],
-            extra_link_args=['-static'],
-        ),
-    ],
+    c_executables=[Extension('dumb-init', ['dumb-init.c'])],
     cmdclass={
         'bdist_wheel': bdist_wheel,
         'build': build,
