@@ -42,6 +42,7 @@ int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
+char forward_sleep = 10;
 
 int translate_signal(int signum) {
     if (signum <= 0 || signum > MAXSIG) {
@@ -60,6 +61,9 @@ int translate_signal(int signum) {
 void forward_signal(int signum) {
     signum = translate_signal(signum);
     if (signum != 0) {
+        if (signum == SIGTERM) {
+            sleep(forward_sleep);
+        }
         kill(use_setsid ? -child_pid : child_pid, signum);
         DEBUG("Forwarded signal %d to children.\n", signum);
     } else {

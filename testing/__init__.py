@@ -86,7 +86,7 @@ def process_state(pid):
     return m.group(1)
 
 
-def sleep_until(fn, timeout=1.5):
+def sleep_until(fn, timeout=15):
     """Sleep until fn succeeds, or we time out."""
     interval = 0.01
     so_far = 0
