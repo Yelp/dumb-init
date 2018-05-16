@@ -1,0 +1,15 @@
+language: c
+services:
+    - docker
+
+env:
+    matrix:
+        - ITEST_TARGET=itest_trusty
+        - ITEST_TARGET=itest_xenial
+        - ITEST_TARGET=itest_bionic
+        - ITEST_TARGET=itest_jessie
+        - ITEST_TARGET=itest_stretch
+        - ITEST_TARGET=itest_tox
+
+script:
+   - make "$ITEST_TARGET"

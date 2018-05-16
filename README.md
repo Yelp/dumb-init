@@ -1,7 +1,7 @@
 dumb-init
 ========
 
-[![Circle CI](https://circleci.com/gh/Yelp/dumb-init.svg?style=svg)](https://circleci.com/gh/Yelp/dumb-init)
+[![Travis CI](https://travis-ci.org/Yelp/dumb-init.svg?branch=travis-ci)](https://travis-ci.org/Yelp/dumb-init/)
 [![PyPI version](https://badge.fury.io/py/dumb-init.svg)](https://pypi.python.org/pypi/dumb-init)
 
 

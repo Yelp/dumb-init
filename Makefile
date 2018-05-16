@@ -69,18 +69,19 @@ test:
 install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
 
-ITEST_TARGETS = itest_trusty itest_xenial itest_jessie itest_stretch
+ITEST_TARGETS = itest_trusty itest_xenial itest_bionic itest_jessie itest_stretch
 
 .PHONY: itest $(ITEST_TARGETS)
 itest: $(ITEST_TARGETS)
 
 itest_trusty: _itest-ubuntu-trusty
 itest_xenial: _itest-ubuntu-xenial
+itest_bionic: _itest-ubuntu-bionic
 itest_jessie: _itest-debian-jessie
 itest_stretch: _itest-debian-stretch
 
 itest_tox:
-	$(DOCKER_RUN_TEST) ubuntu:xenial /mnt/ci/docker-tox-test
+	$(DOCKER_RUN_TEST) ubuntu:bionic /mnt/ci/docker-tox-test
 
 _itest-%: _itest_deb-% _itest_python-%
 	@true
