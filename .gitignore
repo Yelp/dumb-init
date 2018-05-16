@@ -3,7 +3,7 @@
 *.gc*
 *.o
 *.py[cod]
-.cache
+.pytest_cache
 .tox
 __pycache__/
 build/
