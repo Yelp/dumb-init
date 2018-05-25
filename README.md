@@ -139,17 +139,27 @@ even if you rewrite it to something else.
 You have a few options for using `dumb-init`:
 
 
-### Option 1: Installing via an internal apt server (Debian/Ubuntu)
+### Option 1: Installing from your distro's package repositories (Debian/Ubuntu)
+
+If you're using a recent version of Debian (stretch or newer) or Ubuntu (bionic
+or newer), dumb-init is already available in your distro's official package
+repos.
+
+To install dumb-init, you can run `apt install dumb-init` to install dumb-init,
+just like you'd install any other package.
+
+
+### Option 2: Installing via an internal apt server (Debian/Ubuntu)
 
 If you have an internal apt server, uploading the `.deb` to your server is the
 recommended way to use `dumb-init`. In your Dockerfiles, you can simply
-`apt-get install dumb-init` and it will be available.
+`apt install dumb-init` and it will be available.
 
 Debian packages are available from the [GitHub Releases tab][gh-releases], or
 you can run `make builddeb` yourself.
 
 
-### Option 2: Installing the `.deb` package manually (Debian/Ubuntu)
+### Option 3: Installing the `.deb` package manually (Debian/Ubuntu)
 
 If you don't have an internal apt server, you can use `dpkg -i` to install the
 `.deb` package. You can choose how you get the `.deb` onto your container
@@ -163,7 +173,7 @@ RUN dpkg -i dumb-init_*.deb
 ```
 
 
-### Option 3: Downloading the binary directly
+### Option 4: Downloading the binary directly
 
 Since dumb-init is released as a statically-linked binary, you can usually just
 plop it into your images. Here's an example of doing that in a Dockerfile:
@@ -174,7 +184,7 @@ RUN chmod +x /usr/local/bin/dumb-init
 ```
 
 
-### Option 4: Installing from PyPI
+### Option 5: Installing from PyPI
 
 Though `dumb-init` is written entirely in C, we also provide a Python package
 which compiles and installs the binary. It can be installed [from
