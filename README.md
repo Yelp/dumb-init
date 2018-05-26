@@ -139,14 +139,20 @@ even if you rewrite it to something else.
 You have a few options for using `dumb-init`:
 
 
-### Option 1: Installing from your distro's package repositories (Debian/Ubuntu)
+### Option 1: Installing from your distro's package repositories (Debian, Ubuntu, etc.)
 
-If you're using a recent version of Debian (stretch or newer) or Ubuntu (bionic
-or newer), dumb-init is already available in your distro's official package
-repos.
+Many popular Linux distributions (including Debian (since `stretch`) and Debian
+derivatives such as Ubuntu (since `bionic`)) now contain dumb-init packages in
+their official repositories.
 
-To install dumb-init, you can run `apt install dumb-init` to install dumb-init,
-just like you'd install any other package.
+On Debian-based distributions, you can run `apt install dumb-init` to install
+dumb-init, just like you'd install any other package.
+
+*Note:* Most distro-provided versions of dumb-init are not statically-linked,
+unlike the versions we provide (see the other options below). This is normally
+perfectly fine, but means that these versions of dumb-init generally won't work
+when copied to other Linux distros, unlike the statically-linked versions we
+provide.
 
 
 ### Option 2: Installing via an internal apt server (Debian/Ubuntu)
