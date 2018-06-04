@@ -1,7 +1,9 @@
 import os
 import pty
 import re
+import signal
 import termios
+import time
 
 import pytest
 
@@ -81,3 +83,36 @@ def test_child_gets_controlling_tty_if_we_had_one():
         # "m" is job control
         flags = m.group(1)
         assert b'm' in flags
+
+
+def test_sighup_sigcont_ignored_if_was_session_leader():
+    """The first SIGHUP/SIGCONT should be ignored if dumb-init is the session leader.
+
+    Due to TTY quirks (#136), when dumb-init is the session leader and forks,
+    it needs to avoid forwarding the first SIGHUP and SIGCONT to the child.
+    Otherwise, the child might receive the SIGHUP post-exec and terminate
+    itself.
+
+    You can "force" this race by adding a `sleep(1)` before the signal handling
+    loop in dumb-init's code, but it's hard to reproduce the race reliably in a
+    test otherwise. Because of this, we're stuck just asserting debug messages.
+    """
+    pid, fd = pty.fork()
+    if pid == 0:
+        # child
+        os.execvp('dumb-init', ('dumb-init', '-v', 'sleep', '20'))
+    else:
+        # parent
+        ttyflags(fd)
+
+        # send another SIGCONT to make sure only the first is ignored
+        time.sleep(0.5)
+        os.kill(pid, signal.SIGHUP)
+
+        output = readall(fd).decode('UTF-8')
+
+        assert 'Ignoring tty hand-off signal {}.'.format(signal.SIGHUP) in output
+        assert 'Ignoring tty hand-off signal {}.'.format(signal.SIGCONT) in output
+
+        assert '[dumb-init] Forwarded signal {} to children.'.format(signal.SIGHUP) in output
+        assert '[dumb-init] Forwarded signal {} to children.'.format(signal.SIGCONT) not in output
