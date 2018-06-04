@@ -5,18 +5,19 @@ services:
 addons:
     artifacts:
         target_paths:
-            - /dumb-init/${TRAVIS_BUILD_NUMBER}/${ITEST_TARGET}
+            - /dumb-init/${TRAVIS_BUILD_NUMBER}/${ITEST_TARGET}-${TRAVIS_OS_NAME}
         paths:
             - $(find dist -type f | tr "\n" ':')
 
-env:
-    matrix:
-        - ITEST_TARGET=itest_trusty
-        - ITEST_TARGET=itest_xenial
-        - ITEST_TARGET=itest_bionic
-        - ITEST_TARGET=itest_jessie
-        - ITEST_TARGET=itest_stretch
-        - ITEST_TARGET=itest_tox
+matrix:
+    include:
+        - env: ITEST_TARGET=itest_trusty
+        - env: ITEST_TARGET=itest_xenial
+        - env: ITEST_TARGET=itest_bionic
+        - env: ITEST_TARGET=itest_stretch
+        - env: ITEST_TARGET=itest_tox
+        - os: linux-ppc64le
+          env: ITEST_TARGET=itest_stretch
 
 script:
    - make "$ITEST_TARGET"
