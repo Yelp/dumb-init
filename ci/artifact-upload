@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -n "${ARTIFACTS_SECRET:-}" ]; then
+    # Travis has built-in support for artifact uploading, but it's broken on ppc64le:
+    # https://github.com/travis-ci/travis-ci/issues/9710
+    pip install --user awscli
+
+    ARTIFACTS_PATH="dumb-init/${TRAVIS_BUILD_NUMBER}/${ITEST_TARGET}-${TRAVIS_OS_NAME}"
+    echo 'Uploading artifacts:'
+    for f in dist/*; do
+        AWS_ACCESS_KEY_ID=$ARTIFACTS_KEY AWS_SECRET_ACCESS_KEY=$ARTIFACTS_SECRET ~/.local/bin/aws \
+            s3 --region $ARTIFACTS_REGION \
+            cp "$f" s3://$ARTIFACTS_BUCKET/$ARTIFACTS_PATH/$(dirname "$f")/
+       echo "* https://${ARTIFACTS_BUCKET}.s3.amazonaws.com/$ARTIFACTS_PATH/$f"
+    done
+fi

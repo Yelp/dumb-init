@@ -2,13 +2,6 @@ language: c
 services:
     - docker
 
-addons:
-    artifacts:
-        target_paths:
-            - /dumb-init/${TRAVIS_BUILD_NUMBER}/${ITEST_TARGET}-${TRAVIS_OS_NAME}
-        paths:
-            - $(find dist -type f | tr "\n" ':')
-
 matrix:
     include:
         - env: ITEST_TARGET=itest_trusty
@@ -23,7 +16,4 @@ script:
    - make "$ITEST_TARGET"
 
 after_script:
-   - if [ -n "${ARTIFACTS_SECRET:-}" ]; then
-         echo 'Build artifacts are available at:';
-         find dist -type f | xargs --replace echo "* https://yelp-travis-artifacts.s3.amazonaws.com/dumb-init/${TRAVIS_BUILD_NUMBER}/${ITEST_TARGET}/{}";
-     fi
+   - ci/artifact-upload
