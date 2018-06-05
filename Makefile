@@ -4,6 +4,7 @@ CFLAGS=-std=gnu99 -static -s -Wall -Werror -O3
 TEST_PACKAGE_DEPS := build-essential python python-pip procps python-dev python-setuptools
 
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
+VERSION = $(shell cat VERSION)
 
 .PHONY: build
 build: VERSION.h
@@ -24,11 +25,6 @@ clean-tox:
 
 .PHONY: release
 release: python-dists builddeb-docker
-	$(eval VERSION := $(shell cat VERSION))
-	# extract the built binary from the Debian package
-	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_amd64.deb | \
-		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
-	mv dist/dumb-init dist/dumb-init_$(VERSION)_amd64
 	cd dist && \
 		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
 		> sha256sums
@@ -50,6 +46,10 @@ builddeb:
 	debuild --set-envvar=CC=musl-gcc -us -uc -b
 	mkdir -p dist
 	mv ../dumb-init_*.deb dist/
+	# Extract the built binary from the Debian package
+	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture).deb | \
+		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
+	mv dist/dumb-init dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture)
 
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
