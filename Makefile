@@ -24,9 +24,9 @@ clean-tox:
 	rm -rf .tox
 
 .PHONY: release
-release: python-dists builddeb-docker
+release: python-dists
 	cd dist && \
-		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
+		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64el \
 		> sha256sums
 
 .PHONY: python-dists
