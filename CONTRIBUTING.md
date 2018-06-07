@@ -26,17 +26,14 @@ The process to release a new version is:
 1. Update the version in `VERSION` and run `make VERSION.h`
 2. Update the Debian changelog with `dch -v {new version}`.
 3. Update the two `wget` urls in the README to point to the new version.
-4. Push these changes as a new branch (has to be on Yelp/dumb-init, not a fork)
-   and let Travis build it.
-5. Find and download the binary and Debian packages for both amd64 and ppc64el;
-   there will be links printed at the end of the Travis output. Put these into
-   your `dist` directory.
-6. Run `make release`
-7. Put your commit on master (no merge or PR needed) and tag the commit like
-   `v1.0.0`.
-8. `git push --tags origin master`
-9. Run `twine upload --skip-existing dist/*.tar.gz dist/*.whl` to upload the
+4. Commit the changes and tag the commit like `v1.0.0`.
+5. `git push --tags origin master`
+6. Wait for Travis to run, then find and download the binary and Debian
+   packages for both amd64 and ppc64el; there will be links printed at the end
+   of the Travis output. Put these into your `dist` directory.
+7. Run `make release`
+8. Run `twine upload --skip-existing dist/*.tar.gz dist/*.whl` to upload the
    new version to PyPI
-10. Upload the resulting Debian package, binary (inside the `dist` directory),
+9. Upload the resulting Debian package, binary (inside the `dist` directory),
    and sha256sums file to a new [GitHub
    release](https://github.com/Yelp/dumb-init/releases)
