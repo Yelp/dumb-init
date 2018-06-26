@@ -7,6 +7,7 @@ import pytest
 from testing import NORMAL_SIGNALS
 from testing import print_signals
 from testing import process_state
+from testing import signum_and_time_from_stdout
 
 
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
@@ -15,7 +16,8 @@ def test_proxies_signals():
     with print_signals() as (proc, _):
         for signum in NORMAL_SIGNALS:
             proc.send_signal(signum)
-            assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == signum
 
 
 def _rewrite_map_to_args(rewrite_map):
@@ -60,7 +62,8 @@ def test_proxies_signals_with_rewrite(rewrite_map, sequence, expected):
     with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         for send, expect_receive in zip(sequence, expected):
             proc.send_signal(send)
-            assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == expect_receive
 
 
 @pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
@@ -77,13 +80,14 @@ def test_default_rewrites_can_be_overriden_with_setsid_enabled():
         for send, expect_receive in rewrite_map.items():
             assert process_state(proc.pid) in ['running', 'sleeping']
             proc.send_signal(send)
-
-            assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == expect_receive
             os.waitpid(proc.pid, os.WUNTRACED)
             assert process_state(proc.pid) == 'stopped'
 
             proc.send_signal(signal.SIGCONT)
-            assert proc.stdout.readline() == '{0}\n'.format(signal.SIGCONT).encode('ascii')
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == signal.SIGCONT
             assert process_state(proc.pid) in ['running', 'sleeping']
 
 
@@ -98,8 +102,10 @@ def test_ignored_signals_are_not_proxied():
     with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         proc.send_signal(signal.SIGTERM)
         proc.send_signal(signal.SIGINT)
-        assert proc.stdout.readline() == '{0}\n'.format(signal.SIGQUIT).encode('ascii')
+        received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+        assert received_signum == signal.SIGQUIT
 
         proc.send_signal(signal.SIGWINCH)
         proc.send_signal(signal.SIGHUP)
-        assert proc.stdout.readline() == '{0}\n'.format(signal.SIGHUP).encode('ascii')
+        received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+        assert received_signum == signal.SIGHUP

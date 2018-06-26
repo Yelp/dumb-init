@@ -118,7 +118,6 @@ just add `--rewrite 15:3` on the command line.
 
 To drop a signal entirely, you can rewrite it to the special number `0`.
 
-
 #### Signal rewriting special case
 
 When running in setsid mode, it is not sufficient to forward
@@ -132,6 +131,18 @@ behavior by rewriting the signals back to their original values, if desired.
 One caveat with this feature: for job control signals (`SIGTSTP`, `SIGTTIN`,
 `SIGTTOU`), dumb-init will always suspend itself after receiving the signal,
 even if you rewrite it to something else.
+
+
+### Signal pausing
+
+dumb-init allows pausing incoming signals before proxying (or rewriting) them.
+This is useful in cases you're using a Docker supervisor (like Mesos or
+Kubernetes), because typically on those setups you need to install a `SIGTERM` handler whose responsibility is to delay the shutdown process to allow the
+ingress controller (like Traefik) to detect the Endpoints disappearing and
+taking the Service out of load-balancing rotation.
+
+For example, to pause the signal `SIGTERM` (number 15) for 10 seconds, just
+add `--pause 15:10` on the command line.
 
 
 ## Installing inside Docker containers

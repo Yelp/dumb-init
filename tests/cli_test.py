@@ -57,6 +57,7 @@ def test_help_message(flag, current_version):
         b'   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n'
         b'                        To ignore (not proxy) a signal, rewrite it to 0.\n'
         b'                        This option can be specified multiple times.\n'
+        b'   -p, --pause s:n      Pause for n seconds when signal s is received before forwarding it.\n'
         b'   -v, --verbose        Print debugging information to stderr.\n'
         b'   -h, --help           Print this help message and exit.\n'
         b'   -V, --version        Print the current version and exit.\n'
@@ -143,6 +144,32 @@ def test_rewrite_errors(extra_args):
     assert stderr == (
         b'Usage: -r option takes <signum>:<signum>, where <signum> '
         b'is between 1 and 31.\n'
+        b'This option can be specified multiple times.\n'
+        b'Use --help for full usage.\n'
+    )
+
+@pytest.mark.parametrize('pause_extra_args', [
+    ('-p',),
+    ('-p', 'herp'),
+    ('-p', 'herp:derp'),
+    ('-p', '15'),
+    ('-p', '15::10'),
+    ('-p', '15:derp'),
+    ('-p', '15:10', '-p'),
+    ('-p', '15:10', '-p', '0'),
+    ('-p', '15:10', '-p', '1:61'),
+])
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_pause_errors(pause_extra_args):
+    proc = Popen(
+        ('dumb-init',) + pause_extra_args + ('echo', 'oh,', 'hi'),
+        stdout=PIPE, stderr=PIPE,
+    )
+    stdout, stderr = proc.communicate()
+    assert proc.returncode == 1
+    assert stderr == (
+        b'Usage: -p option takes <signum>:<duration>, where signum is \n'
+        b'between 1 and 31 and duration is between 1 and 60.\n'
         b'This option can be specified multiple times.\n'
         b'Use --help for full usage.\n'
     )

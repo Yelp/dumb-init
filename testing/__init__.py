@@ -109,3 +109,9 @@ def kill_if_alive(pid, signum=signal.SIGKILL):
     except OSError as ex:
         if ex.errno != errno.ESRCH:  # No such process
             raise
+
+def signum_and_time_from_stdout(stdout):
+    s = stdout.readline()
+    values = s.split(b':')
+    return int(values[0]), int(float(values[1]))
+
