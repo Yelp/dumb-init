@@ -24,3 +24,9 @@ repos:
     rev: v1.1.5
     hooks:
     -   id: remove-tabs
+-   repo: https://github.com/Yelp/detect-secrets
+    rev: 0.9.1
+    hooks:
+    -   id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: tests/.*
