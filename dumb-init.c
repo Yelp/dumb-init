@@ -37,7 +37,10 @@
 #define MAXSIG 31
 
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
+// User-specified signal rewriting.
 int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
+// One-time ignores due to TTY quirks. 0 = no skip, 1 = skip the next-received signal.
+char signal_temporary_ignores[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
 
 pid_t child_pid = -1;
 char debug = 0;
@@ -89,7 +92,11 @@ void forward_signal(int signum) {
 */
 void handle_signal(int signum) {
     DEBUG("Received signal %d.\n", signum);
-    if (signum == SIGCHLD) {
+
+    if (signal_temporary_ignores[signum] == 1) {
+        DEBUG("Ignoring tty hand-off signal %d.\n", signum);
+        signal_temporary_ignores[signum] = 0;
+    } else if (signum == SIGCHLD) {
         int status, exit_status;
         pid_t killed_pid;
         while ((killed_pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -251,13 +258,36 @@ int main(int argc, char *argv[]) {
     for (i = 1; i <= MAXSIG; i++)
         signal(i, dummy);
 
-    /* detach dumb-init from controlling tty */
-    if (use_setsid && ioctl(STDIN_FILENO, TIOCNOTTY) == -1) {
-        DEBUG(
-            "Unable to detach from controlling tty (errno=%d %s).\n",
-            errno,
-            strerror(errno)
-        );
+    /*
+     * Detach dumb-init from controlling tty, so that the child's session can
+     * attach to it instead.
+     *
+     * We want the child to be able to be the session leader of the TTY so that
+     * it can do normal job control.
+     */
+    if (use_setsid) {
+        if (ioctl(STDIN_FILENO, TIOCNOTTY) == -1) {
+            DEBUG(
+                "Unable to detach from controlling tty (errno=%d %s).\n",
+                errno,
+                strerror(errno)
+            );
+        } else {
+            /*
+             * When the session leader detaches from its controlling tty via
+             * TIOCNOTTY, the kernel sends SIGHUP and SIGCONT to the process
+             * group. We need to be careful not to forward these on to the
+             * dumb-init child so that it doesn't receive a SIGHUP and
+             * terminate itself (#136).
+             */
+            if (getsid(0) == getpid()) {
+                DEBUG("Detached from controlling tty, ignoring the first SIGHUP and SIGCONT we receive.\n");
+                signal_temporary_ignores[SIGHUP] = 1;
+                signal_temporary_ignores[SIGCONT] = 1;
+            } else {
+                DEBUG("Detached from controlling tty, but was not session leader.\n");
+            }
+        }
     }
 
     child_pid = fork();
