@@ -36,27 +36,28 @@
 // TODO: this is likely not portable outside of Linux, or on strange architectures
 #define MAXSIG 31
 
+// Max number of seconds to pause before forwarding a signal
+#define MAX_PAUSE_DURATION 60
+
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
 // User-specified signal rewriting.
 int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
 // One-time ignores due to TTY quirks. 0 = no skip, 1 = skip the next-received signal.
 char signal_temporary_ignores[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
+// Seconds to pause on signals
+int signal_pause[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
 
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
 
 int translate_signal(int signum) {
-    if (signum <= 0 || signum > MAXSIG) {
+    int translated = signal_rewrite[signum];
+    if (translated == -1) {
         return signum;
     } else {
-        int translated = signal_rewrite[signum];
-        if (translated == -1) {
-            return signum;
-        } else {
-            DEBUG("Translating signal %d to %d.\n", signum, translated);
-            return translated;
-        }
+        DEBUG("Translating signal %d to %d.\n", signum, translated);
+        return translated;
     }
 }
 
@@ -67,6 +68,13 @@ void forward_signal(int signum) {
         DEBUG("Forwarded signal %d to children.\n", signum);
     } else {
         DEBUG("Not forwarding signal %d to children (ignored).\n", signum);
+    }
+}
+
+void pause_signal(int signum) {
+    int pause_duration = signal_pause[signum];
+    if (pause_duration > 0) {
+        sleep(pause_duration);
     }
 }
 
@@ -92,11 +100,13 @@ void forward_signal(int signum) {
 */
 void handle_signal(int signum) {
     DEBUG("Received signal %d.\n", signum);
-
     if (signal_temporary_ignores[signum] == 1) {
         DEBUG("Ignoring tty hand-off signal %d.\n", signum);
         signal_temporary_ignores[signum] = 0;
-    } else if (signum == SIGCHLD) {
+        return;
+    }
+    pause_signal(signum); // pause on signal if needed
+    if (signum == SIGCHLD) {
         int status, exit_status;
         pid_t killed_pid;
         while ((killed_pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -139,6 +149,7 @@ void print_help(char *argv[]) {
         "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
         "                        To ignore (not proxy) a signal, rewrite it to 0.\n"
         "                        This option can be specified multiple times.\n"
+        "   -p, --pause s:n      Pause for n seconds when signal s is received before forwarding it.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -161,6 +172,18 @@ void print_rewrite_signum_help() {
     exit(1);
 }
 
+void print_pause_signum_help() {
+    fprintf(
+        stderr,
+        "Usage: -p option takes <signum>:<duration>, where signum is \n"
+        "between 1 and %d and duration is between 1 and %d.\n"
+        "This option can be specified multiple times.\n"
+        "Use --help for full usage.\n",
+        MAXSIG, MAX_PAUSE_DURATION
+    );
+    exit(1);
+}
+
 void parse_rewrite_signum(char *arg) {
     int signum, replacement;
     if (
@@ -174,6 +197,19 @@ void parse_rewrite_signum(char *arg) {
     }
 }
 
+void parse_pause_signum(char *arg) {
+    int signum, pause_duration;
+    if (
+        sscanf(arg, "%d:%d", &signum, &pause_duration) == 2 &&
+        (signum >= 1 && signum <= MAXSIG) &&
+        (pause_duration >= 0 && pause_duration <= MAX_PAUSE_DURATION)
+    ) {
+        signal_pause[signum] = pause_duration;
+    } else {
+        print_pause_signum_help();
+    }
+}
+
 void set_rewrite_to_sigstop_if_not_defined(int signum) {
     if (signal_rewrite[signum] == -1)
         signal_rewrite[signum] = SIGSTOP;
@@ -184,12 +220,13 @@ char **parse_command(int argc, char *argv[]) {
     struct option long_options[] = {
         {"help",         no_argument,       NULL, 'h'},
         {"single-child", no_argument,       NULL, 'c'},
+        {"pause",        required_argument, NULL, 'p'},
         {"rewrite",      required_argument, NULL, 'r'},
         {"verbose",      no_argument,       NULL, 'v'},
         {"version",      no_argument,       NULL, 'V'},
         {NULL,                     0,       NULL,   0},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVcp:r:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -202,6 +239,9 @@ char **parse_command(int argc, char *argv[]) {
                 exit(0);
             case 'c':
                 use_setsid = 0;
+                break;
+            case 'p':
+                parse_pause_signum(optarg);
                 break;
             case 'r':
                 parse_rewrite_signum(optarg);

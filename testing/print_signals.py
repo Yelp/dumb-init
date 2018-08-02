@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Print received signals to stdout.
+"""Print received signals with current timestamp to stdout.
 
 Since all signals are printed and otherwise ignored, you'll need to send
 SIGKILL (kill -9) to this process to actually end it.
@@ -27,8 +27,11 @@ def unbuffered_print(line):
 
 
 def print_signal(signum, _):
-    print_queue.append(signum)
+    msg = '{}:{}'.format(signum, time.time())
+    print_queue.append(msg)
 
+def signum_from_msg(msg):
+    return msg.split(':')[0]
 
 if __name__ == '__main__':
     for signum in CATCHABLE_SIGNALS:
@@ -39,9 +42,9 @@ if __name__ == '__main__':
     # loop forever just printing signals
     while True:
         if print_queue:
-            signum = print_queue.pop()
-            unbuffered_print(signum)
-
+            msg = print_queue.pop()
+            unbuffered_print(msg)
+            signum = signum_from_msg(msg)
             if signum == signal.SIGINT and last_signal == signal.SIGINT:
                 print('Received SIGINT twice, exiting.')
                 exit(0)

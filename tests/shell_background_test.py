@@ -6,6 +6,7 @@ import pytest
 from testing import print_signals
 from testing import process_state
 from testing import sleep_until
+from testing import signum_and_time_from_stdout
 from testing import SUSPEND_SIGNALS
 
 
@@ -30,9 +31,9 @@ def test_shell_background_support_setsid():
 
             # and then both wake up again
             proc.send_signal(SIGCONT)
-            assert (
-                proc.stdout.readline() == '{0}\n'.format(SIGCONT).encode('ascii')
-            )
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == SIGCONT
+
             assert process_state(pid) in ['running', 'sleeping']
             assert process_state(proc.pid) in ['running', 'sleeping']
 
@@ -46,12 +47,13 @@ def test_shell_background_support_without_setsid():
         for signum in SUSPEND_SIGNALS:
             assert process_state(proc.pid) in ['running', 'sleeping']
             proc.send_signal(signum)
-            assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == signum
+            
             os.waitpid(proc.pid, os.WUNTRACED)
             assert process_state(proc.pid) == 'stopped'
 
             proc.send_signal(SIGCONT)
-            assert (
-                proc.stdout.readline() == '{0}\n'.format(SIGCONT).encode('ascii')
-            )
+            received_signum, _ = signum_and_time_from_stdout(proc.stdout)
+            assert received_signum == SIGCONT
             assert process_state(proc.pid) in ['running', 'sleeping']

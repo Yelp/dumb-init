@@ -11,6 +11,7 @@ from testing import is_alive
 from testing import kill_if_alive
 from testing import pid_tree
 from testing import sleep_until
+from testing import signum_and_time_from_stdout
 
 
 def spawn_and_kill_pipeline():
@@ -109,7 +110,8 @@ def test_all_processes_receive_term_on_exit_if_setsid():
     child_pid, child_stdout = spawn_process_which_dies_with_children()
 
     # print_signals should have received TERM
-    assert child_stdout.readline() == b'15\n'
+    received_signum, _ = signum_and_time_from_stdout(child_stdout)
+    assert received_signum == signal.SIGTERM
 
     os.kill(child_pid, signal.SIGKILL)
 
@@ -124,7 +126,8 @@ def test_processes_dont_receive_term_on_exit_if_no_setsid():
     # some other signals and ensure they were received (and TERM wasn't)
     for signum in [1, 2, 3]:
         os.kill(child_pid, signum)
-        assert child_stdout.readline() == str(signum).encode('ascii') + b'\n'
+        received_signum, _ = signum_and_time_from_stdout(child_stdout)
+        assert received_signum == signum
 
     os.kill(child_pid, signal.SIGKILL)
 
