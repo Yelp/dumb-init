@@ -256,8 +256,9 @@ int main(int argc, char *argv[]) {
     sigprocmask(SIG_BLOCK, &all_signals, NULL);
 
     int i = 0;
-    for (i = 1; i <= MAXSIG; i++)
+    for (i = 1; i <= MAXSIG; i++) {
         signal(i, dummy);
+    }
 
     /*
      * Detach dumb-init from controlling tty, so that the child's session can
