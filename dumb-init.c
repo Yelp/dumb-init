@@ -175,8 +175,9 @@ void parse_rewrite_signum(char *arg) {
 }
 
 void set_rewrite_to_sigstop_if_not_defined(int signum) {
-    if (signal_rewrite[signum] == -1)
+    if (signal_rewrite[signum] == -1) {
         signal_rewrite[signum] = SIGSTOP;
+    }
 }
 
 char **parse_command(int argc, char *argv[]) {
@@ -255,8 +256,9 @@ int main(int argc, char *argv[]) {
     sigprocmask(SIG_BLOCK, &all_signals, NULL);
 
     int i = 0;
-    for (i = 1; i <= MAXSIG; i++)
+    for (i = 1; i <= MAXSIG; i++) {
         signal(i, dummy);
+    }
 
     /*
      * Detach dumb-init from controlling tty, so that the child's session can
