@@ -175,8 +175,9 @@ void parse_rewrite_signum(char *arg) {
 }
 
 void set_rewrite_to_sigstop_if_not_defined(int signum) {
-    if (signal_rewrite[signum] == -1)
+    if (signal_rewrite[signum] == -1) {
         signal_rewrite[signum] = SIGSTOP;
+    }
 }
 
 char **parse_command(int argc, char *argv[]) {
