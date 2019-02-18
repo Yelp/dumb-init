@@ -80,7 +80,7 @@ def spawn_process_which_dies_with_children():
             # we need to sleep before the shell exits, or dumb-init might send
             # TERM to print_signals before it has had time to register custom
             # signal handlers
-            '{python} -m testing.print_signals & sleep 0.1'.format(
+            '{python} -m testing.print_signals & sleep 1'.format(
                 python=sys.executable,
             ),
         ),
