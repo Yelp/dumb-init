@@ -32,7 +32,7 @@ def spawn_and_kill_pipeline():
 
 
 def living_pids(pids):
-    return set(pid for pid in pids if is_alive(pid))
+    return {pid for pid in pids if is_alive(pid)}
 
 
 @pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
@@ -91,7 +91,7 @@ def spawn_process_which_dies_with_children():
 
     # read a line from print_signals, figure out its pid
     line = proc.stdout.readline()
-    match = re.match(b'ready \(pid: ([0-9]+)\)\n', line)
+    match = re.match(b'ready \\(pid: ([0-9]+)\\)\n', line)
     assert match, line
     child_pid = int(match.group(1))
 

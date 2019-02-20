@@ -15,12 +15,12 @@ def test_proxies_signals():
     with print_signals() as (proc, _):
         for signum in NORMAL_SIGNALS:
             proc.send_signal(signum)
-            assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
+            assert proc.stdout.readline() == '{}\n'.format(signum).encode('ascii')
 
 
 def _rewrite_map_to_args(rewrite_map):
     return chain.from_iterable(
-        ('-r', '{0}:{1}'.format(src, dst)) for src, dst in rewrite_map.items()
+        ('-r', '{}:{}'.format(src, dst)) for src, dst in rewrite_map.items()
     )
 
 
@@ -60,7 +60,7 @@ def test_proxies_signals_with_rewrite(rewrite_map, sequence, expected):
     with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         for send, expect_receive in zip(sequence, expected):
             proc.send_signal(send)
-            assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
+            assert proc.stdout.readline() == '{}\n'.format(expect_receive).encode('ascii')
 
 
 @pytest.mark.usefixtures('both_debug_modes', 'setsid_enabled')
@@ -78,12 +78,12 @@ def test_default_rewrites_can_be_overriden_with_setsid_enabled():
             assert process_state(proc.pid) in ['running', 'sleeping']
             proc.send_signal(send)
 
-            assert proc.stdout.readline() == '{0}\n'.format(expect_receive).encode('ascii')
+            assert proc.stdout.readline() == '{}\n'.format(expect_receive).encode('ascii')
             os.waitpid(proc.pid, os.WUNTRACED)
             assert process_state(proc.pid) == 'stopped'
 
             proc.send_signal(signal.SIGCONT)
-            assert proc.stdout.readline() == '{0}\n'.format(signal.SIGCONT).encode('ascii')
+            assert proc.stdout.readline() == '{}\n'.format(signal.SIGCONT).encode('ascii')
             assert process_state(proc.pid) in ['running', 'sleeping']
 
 
@@ -98,8 +98,8 @@ def test_ignored_signals_are_not_proxied():
     with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
         proc.send_signal(signal.SIGTERM)
         proc.send_signal(signal.SIGINT)
-        assert proc.stdout.readline() == '{0}\n'.format(signal.SIGQUIT).encode('ascii')
+        assert proc.stdout.readline() == '{}\n'.format(signal.SIGQUIT).encode('ascii')
 
         proc.send_signal(signal.SIGWINCH)
         proc.send_signal(signal.SIGHUP)
-        assert proc.stdout.readline() == '{0}\n'.format(signal.SIGHUP).encode('ascii')
+        assert proc.stdout.readline() == '{}\n'.format(signal.SIGHUP).encode('ascii')

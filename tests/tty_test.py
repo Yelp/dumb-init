@@ -77,7 +77,7 @@ def test_child_gets_controlling_tty_if_we_had_one():
         output = readall(sfd)
         assert os.waitpid(pid, 0) == (pid, 0), output
 
-        m = re.search(b'flags are: \[\[([a-zA-Z]+)\]\]\n', output)
+        m = re.search(b'flags are: \\[\\[([a-zA-Z]+)\\]\\]\n', output)
         assert m, output
 
         # "m" is job control
