@@ -13,7 +13,7 @@ import time
 
 
 CATCHABLE_SIGNALS = frozenset(
-    set(range(1, 32)) - set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD])
+    set(range(1, 32)) - {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD}
 )
 
 
@@ -22,7 +22,7 @@ last_signal = None
 
 
 def unbuffered_print(line):
-    sys.stdout.write('{0}\n'.format(line))
+    sys.stdout.write('{}\n'.format(line))
     sys.stdout.flush()
 
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     for signum in CATCHABLE_SIGNALS:
         signal.signal(signum, print_signal)
 
-    unbuffered_print('ready (pid: {0})'.format(os.getpid()))
+    unbuffered_print('ready (pid: {})'.format(os.getpid()))
 
     # loop forever just printing signals
     while True:

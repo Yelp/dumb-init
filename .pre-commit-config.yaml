@@ -24,3 +24,7 @@ repos:
     rev: v1.1.5
     hooks:
     -   id: remove-tabs
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v1.11.3
+    hooks:
+    -   id: pyupgrade
