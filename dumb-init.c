@@ -65,7 +65,9 @@ void forward_signal(int signum) {
     signum = translate_signal(signum);
     if (signum != 0) {
         if (signum == SIGTERM) {
-            sleep(forward_sleep);
+          FILE* dump_init_stop_signal_received_file_ptr = fopen("/tmp/dump-init-stop-signal-received", "w");
+          fclose(dump_init_stop_signal_received_file_ptr);
+          sleep(forward_sleep);
         }
         kill(use_setsid ? -child_pid : child_pid, signum);
         DEBUG("Forwarded signal %d to children.\n", signum);
