@@ -4,6 +4,7 @@ CFLAGS=-std=gnu99 -static -s -Wall -Werror -O3
 TEST_PACKAGE_DEPS := build-essential python python-pip procps python-dev python-setuptools
 
 DOCKER_RUN_TEST := docker run -v $(PWD):/mnt:ro
+VERSION = $(shell cat VERSION)
 
 .PHONY: build
 build: VERSION.h
@@ -23,14 +24,9 @@ clean-tox:
 	rm -rf .tox
 
 .PHONY: release
-release: python-dists builddeb-docker
-	$(eval VERSION := $(shell cat VERSION))
-	# extract the built binary from the Debian package
-	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_amd64.deb | \
-		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
-	mv dist/dumb-init dist/dumb-init_$(VERSION)_amd64
+release: python-dists
 	cd dist && \
-		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 \
+		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64el \
 		> sha256sums
 
 .PHONY: python-dists
@@ -50,6 +46,10 @@ builddeb:
 	debuild --set-envvar=CC=musl-gcc -us -uc -b
 	mkdir -p dist
 	mv ../dumb-init_*.deb dist/
+	# Extract the built binary from the Debian package
+	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture).deb | \
+		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
+	mv dist/dumb-init dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture)
 
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
@@ -69,18 +69,18 @@ test:
 install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
 
-ITEST_TARGETS = itest_trusty itest_xenial itest_jessie itest_stretch
+ITEST_TARGETS = itest_trusty itest_xenial itest_bionic itest_stretch
 
 .PHONY: itest $(ITEST_TARGETS)
 itest: $(ITEST_TARGETS)
 
 itest_trusty: _itest-ubuntu-trusty
 itest_xenial: _itest-ubuntu-xenial
-itest_jessie: _itest-debian-jessie
+itest_bionic: _itest-ubuntu-bionic
 itest_stretch: _itest-debian-stretch
 
 itest_tox:
-	$(DOCKER_RUN_TEST) ubuntu:xenial /mnt/ci/docker-tox-test
+	$(DOCKER_RUN_TEST) ubuntu:bionic /mnt/ci/docker-tox-test
 
 _itest-%: _itest_deb-% _itest_python-%
 	@true

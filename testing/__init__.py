@@ -20,7 +20,7 @@ SUSPEND_SIGNALS = frozenset([
 
 NORMAL_SIGNALS = frozenset(
     set(range(1, 32)) -
-    set([signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD]) -
+    {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD} -
     SUSPEND_SIGNALS
 )
 
@@ -37,7 +37,7 @@ def print_signals(args=()):
         stdout=PIPE,
     )
     line = proc.stdout.readline()
-    m = re.match(b'^ready \(pid: ([0-9]+)\)\n$', line)
+    m = re.match(b'^ready \\(pid: ([0-9]+)\\)\n$', line)
     assert m, line
 
     yield proc, m.group(1).decode('ascii')
@@ -52,7 +52,7 @@ def child_pids(pid):
     for p in LocalPath('/proc').listdir():
         try:
             stat = open(p.join('stat').strpath).read()
-            m = re.match('^\d+ \(.+?\) [a-zA-Z] (\d+) ', stat)
+            m = re.match(r'^\d+ \(.+?\) [a-zA-Z] (\d+) ', stat)
             assert m, stat
             ppid = int(m.group(1))
             if ppid == pid:
@@ -67,11 +67,11 @@ def child_pids(pid):
 def pid_tree(pid):
     """Return a list of all descendant PIDs for the given PID."""
     children = child_pids(pid)
-    return set(
+    return {
         pid
         for child in children
         for pid in pid_tree(child)
-    ) | children
+    } | children
 
 
 def is_alive(pid):
@@ -82,7 +82,7 @@ def is_alive(pid):
 def process_state(pid):
     """Return a process' state, such as "stopped" or "running"."""
     status = LocalPath('/proc').join(str(pid), 'status').read()
-    m = re.search('^State:\s+[A-Z] \(([a-z]+)\)$', status, re.MULTILINE)
+    m = re.search(r'^State:\s+[A-Z] \(([a-z]+)\)$', status, re.MULTILINE)
     return m.group(1)
 
 
