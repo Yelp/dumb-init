@@ -12,10 +12,6 @@ apt-get install -y --no-install-recommends \
     python-pip \
     python-setuptools
 
-pip install --upgrade pip
-hash -r
-pip --version
-
 cp -r /mnt/ /test
 cd /test
 

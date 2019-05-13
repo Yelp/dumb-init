@@ -85,15 +85,15 @@ def test_verbose(flag):
     assert stdout == b'oh, hi\n'
 
     # child/parent race to print output after the fork(), can't guarantee exact order
-    assert re.search(b'(^|\n)\[dumb-init\] setsid complete\.\n', stderr), stderr  # child
+    assert re.search(b'(^|\n)\\[dumb-init\\] setsid complete\\.\n', stderr), stderr  # child
     assert re.search(  # parent
         (
-            '(^|\n)\[dumb-init\] Child spawned with PID [0-9]+\.\n'
+            '(^|\n)\\[dumb-init\\] Child spawned with PID [0-9]+\\.\n'
             '.*'  # child might print here
-            '\[dumb-init\] Received signal {signal.SIGCHLD}\.\n'
-            '\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
-            '\[dumb-init\] Forwarded signal 15 to children\.\n'
-            '\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
+            '\\[dumb-init\\] Received signal {signal.SIGCHLD}\\.\n'
+            '\\[dumb-init\\] A child with PID [0-9]+ exited with exit status 0.\n'
+            '\\[dumb-init\\] Forwarded signal 15 to children\\.\n'
+            '\\[dumb-init\\] Child exited with status 0\\. Goodbye\\.\n$'
         ).format(signal=signal).encode('utf8'),
         stderr,
         re.DOTALL,
@@ -110,11 +110,11 @@ def test_verbose_and_single_child(flag1, flag2):
     assert stdout == b'oh, hi\n'
     assert re.match(
         (
-            '^\[dumb-init\] Child spawned with PID [0-9]+\.\n'
-            '\[dumb-init\] Received signal {signal.SIGCHLD}\.\n'
-            '\[dumb-init\] A child with PID [0-9]+ exited with exit status 0.\n'
-            '\[dumb-init\] Forwarded signal 15 to children\.\n'
-            '\[dumb-init\] Child exited with status 0\. Goodbye\.\n$'
+            '^\\[dumb-init\\] Child spawned with PID [0-9]+\\.\n'
+            '\\[dumb-init\\] Received signal {signal.SIGCHLD}\\.\n'
+            '\\[dumb-init\\] A child with PID [0-9]+ exited with exit status 0.\n'
+            '\\[dumb-init\\] Forwarded signal 15 to children\\.\n'
+            '\\[dumb-init\\] Child exited with status 0\\. Goodbye\\.\n$'
         ).format(signal=signal).encode('utf8'),
         stderr,
     )

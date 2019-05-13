@@ -31,7 +31,7 @@ def test_shell_background_support_setsid():
             # and then both wake up again
             proc.send_signal(SIGCONT)
             assert (
-                proc.stdout.readline() == '{0}\n'.format(SIGCONT).encode('ascii')
+                proc.stdout.readline() == '{}\n'.format(SIGCONT).encode('ascii')
             )
             assert process_state(pid) in ['running', 'sleeping']
             assert process_state(proc.pid) in ['running', 'sleeping']
@@ -46,12 +46,12 @@ def test_shell_background_support_without_setsid():
         for signum in SUSPEND_SIGNALS:
             assert process_state(proc.pid) in ['running', 'sleeping']
             proc.send_signal(signum)
-            assert proc.stdout.readline() == '{0}\n'.format(signum).encode('ascii')
+            assert proc.stdout.readline() == '{}\n'.format(signum).encode('ascii')
             os.waitpid(proc.pid, os.WUNTRACED)
             assert process_state(proc.pid) == 'stopped'
 
             proc.send_signal(SIGCONT)
             assert (
-                proc.stdout.readline() == '{0}\n'.format(SIGCONT).encode('ascii')
+                proc.stdout.readline() == '{}\n'.format(SIGCONT).encode('ascii')
             )
             assert process_state(proc.pid) in ['running', 'sleeping']

@@ -1,3 +1,14 @@
+dumb-init (1.2.2) unstable; urgency=medium
+
+  * Fix a race condition which can cause the child to receive SIGHUP and
+    SIGCONT very shortly after start (#174).
+
+    In general this was very rare, but some environments (especially some
+    container and virtualization environments) appear to encounter it at a
+    much higher rate, possibly due to scheduler quirks.
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Wed, 01 Aug 2018 16:36:22 -0700
+
 dumb-init (1.2.1) unstable; urgency=medium
 
   * Fix verbose debug logging for ignored signals.

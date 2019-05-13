@@ -5,7 +5,6 @@ set -o pipefail
 
 python setup.py clean
 python setup.py sdist
-pip install --upgrade setuptools distribute
 pip install -vv dist/*.tar.gz
 pip install -r requirements-dev.txt
 py.test tests/
