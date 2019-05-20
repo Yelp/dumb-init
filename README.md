@@ -185,8 +185,8 @@ Since dumb-init is released as a statically-linked binary, you can usually just
 plop it into your images. Here's an example of doing that in a Dockerfile:
 
 ```Dockerfile
-RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64
-RUN chmod +x /usr/local/bin/dumb-init
+RUN wget -O /usr/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64
+RUN chmod +x /usr/bin/dumb-init
 ```
 
 
