@@ -13,7 +13,7 @@ import time
 
 
 CATCHABLE_SIGNALS = frozenset(
-    set(range(1, 32)) - {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD}
+    set(range(1, 32)) - {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD},
 )
 
 

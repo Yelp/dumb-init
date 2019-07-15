@@ -120,18 +120,20 @@ def test_verbose_and_single_child(flag1, flag2):
     )
 
 
-@pytest.mark.parametrize('extra_args', [
-    ('-r',),
-    ('-r', ''),
-    ('-r', 'herp'),
-    ('-r', 'herp:derp'),
-    ('-r', '15'),
-    ('-r', '15::12'),
-    ('-r', '15:derp'),
-    ('-r', '15:12', '-r'),
-    ('-r', '15:12', '-r', '0'),
-    ('-r', '15:12', '-r', '1:32'),
-])
+@pytest.mark.parametrize(
+    'extra_args', [
+        ('-r',),
+        ('-r', ''),
+        ('-r', 'herp'),
+        ('-r', 'herp:derp'),
+        ('-r', '15'),
+        ('-r', '15::12'),
+        ('-r', '15:derp'),
+        ('-r', '15:12', '-r'),
+        ('-r', '15:12', '-r', '0'),
+        ('-r', '15:12', '-r', '1:32'),
+    ],
+)
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_rewrite_errors(extra_args):
     proc = Popen(

@@ -2,16 +2,14 @@ Source: dumb-init
 Section: utils
 Priority: extra
 Maintainer: Chris Kuehl <ckuehl@yelp.com>
-Uploaders: Kent Wills <rkwills@yelp.com>
 Build-Depends:
  debhelper (>= 9),
  help2man,
  musl-tools,
 ## Tests:
  procps,
- python,
- python-mock,
- python-pytest,
+ python3,
+ python3-pytest,
 Standards-Version: 3.9.7
 Homepage: https://github.com/Yelp/dumb-init
 Vcs-Browser: https://github.com/Yelp/dumb-init

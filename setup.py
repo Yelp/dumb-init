@@ -58,7 +58,8 @@ class install_cexe(Command):
         # this initializes attributes based on other commands' attributes
         self.set_undefined_options('build', ('build_scripts', 'build_dir'))
         self.set_undefined_options(
-            'install', ('install_scripts', 'install_dir'))
+            'install', ('install_scripts', 'install_dir'),
+        )
 
     def run(self):
 

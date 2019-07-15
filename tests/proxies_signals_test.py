@@ -24,36 +24,38 @@ def _rewrite_map_to_args(rewrite_map):
     )
 
 
-@pytest.mark.parametrize('rewrite_map,sequence,expected', [
-    (
-        {},
-        [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
-        [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
-    ),
+@pytest.mark.parametrize(
+    'rewrite_map,sequence,expected', [
+        (
+            {},
+            [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
+            [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
+        ),
 
-    (
-        {signal.SIGTERM: signal.SIGINT},
-        [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
-        [signal.SIGINT, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
-    ),
+        (
+            {signal.SIGTERM: signal.SIGINT},
+            [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
+            [signal.SIGINT, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
+        ),
 
-    (
-        {
-            signal.SIGTERM: signal.SIGINT,
-            signal.SIGINT: signal.SIGTERM,
-            signal.SIGQUIT: signal.SIGQUIT,
-        },
-        [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
-        [signal.SIGINT, signal.SIGQUIT, signal.SIGCONT, signal.SIGTERM],
-    ),
+        (
+            {
+                signal.SIGTERM: signal.SIGINT,
+                signal.SIGINT: signal.SIGTERM,
+                signal.SIGQUIT: signal.SIGQUIT,
+            },
+            [signal.SIGTERM, signal.SIGQUIT, signal.SIGCONT, signal.SIGINT],
+            [signal.SIGINT, signal.SIGQUIT, signal.SIGCONT, signal.SIGTERM],
+        ),
 
-    # Lowest possible and highest possible signals.
-    (
-        {1: 31, 31: 1},
-        [1, 31],
-        [31, 1],
-    ),
-])
+        # Lowest possible and highest possible signals.
+        (
+            {1: 31, 31: 1},
+            [1, 31],
+            [31, 1],
+        ),
+    ],
+)
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_proxies_signals_with_rewrite(rewrite_map, sequence, expected):
     """Ensure dumb-init can rewrite signals."""

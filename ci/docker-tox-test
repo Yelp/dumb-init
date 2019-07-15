@@ -6,8 +6,7 @@ set -o pipefail
 apt-get update
 apt-get install -y --no-install-recommends \
     git \
-    python2.7-dev \
-    python3.6-dev \
+    python3.7-dev \
     tox
 
 tox

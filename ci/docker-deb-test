@@ -4,7 +4,7 @@ set -o pipefail
 . /mnt/ci/docker
 
 dpkg -i dist/*.deb
-pip install -r requirements-dev.txt
-py.test tests/
+pip3 install -r requirements-dev.txt
+pytest tests/
 
 exec dumb-init /mnt/tests/test-zombies
