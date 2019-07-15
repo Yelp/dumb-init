@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:buster
 
 LABEL maintainer="Chris Kuehl <ckuehl@yelp.com>"
 

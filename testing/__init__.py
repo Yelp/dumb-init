@@ -21,7 +21,7 @@ SUSPEND_SIGNALS = frozenset([
 NORMAL_SIGNALS = frozenset(
     set(range(1, 32)) -
     {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD} -
-    SUSPEND_SIGNALS
+    SUSPEND_SIGNALS,
 )
 
 
@@ -57,7 +57,7 @@ def child_pids(pid):
             ppid = int(m.group(1))
             if ppid == pid:
                 children.add(int(p.basename))
-        except IOError:
+        except OSError:
             # Happens when the process exits after listing it, or between
             # opening stat and reading it.
             pass
