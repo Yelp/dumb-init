@@ -54,7 +54,7 @@ builddeb:
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
 	mkdir -p dist
-	docker run -v $(PWD):/mnt dumb-init-build
+	docker run --user $$(id -u):$$(id -g) -v $(PWD):/tmp/mnt dumb-init-build
 
 .PHONY: docker-image
 docker-image:
