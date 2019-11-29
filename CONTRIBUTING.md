@@ -29,8 +29,8 @@ The process to release a new version is:
 4. Commit the changes and tag the commit like `v1.0.0`.
 5. `git push --tags origin master`
 6. Wait for Travis to run, then find and download the binary and Debian
-   packages for both amd64 and ppc64el; there will be links printed at the end
-   of the Travis output. Put these into your `dist` directory.
+   packages for amd64, ppc64el, and arm64; there will be links printed at the
+   end of the Travis output. Put these into your `dist` directory.
 7. Wait for the s390x build to run on [OSU OSL's ibmz-ci
    Jenkins server](https://ibmz-ci.osuosl.org/job/dumb-init/). This should
    happen automatically within 5 minutes of pushing and produce two artifacts
