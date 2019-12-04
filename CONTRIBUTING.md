@@ -29,16 +29,11 @@ The process to release a new version is:
 4. Commit the changes and tag the commit like `v1.0.0`.
 5. `git push --tags origin master`
 6. Wait for Travis to run, then find and download the binary and Debian
-   packages for amd64, ppc64el, and arm64; there will be links printed at the
+   packages for all architectures; there will be links printed at the
    end of the Travis output. Put these into your `dist` directory.
-7. Wait for the s390x build to run on [OSU OSL's ibmz-ci
-   Jenkins server](https://ibmz-ci.osuosl.org/job/dumb-init/). This should
-   happen automatically within 5 minutes of pushing and produce two artifacts
-   (a binary and a Debian package). Download these into your `dist` directory,
-   similar to the artifacts from Travis.
-8. Run `make release`
-9. Run `twine upload --skip-existing dist/*.tar.gz dist/*.whl` to upload the
+7. Run `make release`
+8. Run `twine upload --skip-existing dist/*.tar.gz dist/*.whl` to upload the
    new version to PyPI
-10. Upload the resulting Debian packages, binaries, and sha256sums file (all
-    inside the `dist` directory) to a new [GitHub
-    release](https://github.com/Yelp/dumb-init/releases)
+9. Upload the resulting Debian packages, binaries, and sha256sums file (all
+   inside the `dist` directory) to a new [GitHub
+   release](https://github.com/Yelp/dumb-init/releases)
