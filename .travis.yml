@@ -10,14 +10,16 @@ matrix:
         - env: ITEST_TARGET=itest_tox
         - os: linux-ppc64le
           env: ITEST_TARGET=itest_buster
-        - os: linux
-          arch: arm64
+        - arch: arm64
+          env: ITEST_TARGET=itest_buster
+        - arch: s390x
           env: ITEST_TARGET=itest_buster
     allow_failures:
         - os: linux-ppc64le
           env: ITEST_TARGET=itest_buster
-        - os: linux
-          arch: arm64
+        - arch: arm64
+          env: ITEST_TARGET=itest_buster
+        - arch: s390x
           env: ITEST_TARGET=itest_buster
 
 
