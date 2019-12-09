@@ -49,7 +49,7 @@ builddeb:
 	# Extract the built binary from the Debian package
 	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture).deb | \
 		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
-	mv dist/dumb-init dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture)
+	mv dist/dumb-init dist/dumb-init_$(VERSION)_$(shell uname -m)
 
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
