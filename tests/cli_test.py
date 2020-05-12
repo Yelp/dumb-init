@@ -54,9 +54,15 @@ def test_help_message(flag, current_version):
         b'   -c, --single-child   Run in single-child mode.\n'
         b'                        In this mode, signals are only proxied to the\n'
         b'                        direct child and not any of its descendants.\n'
-        b'   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n'
-        b'                        To ignore (not proxy) a signal, rewrite it to 0.\n'
-        b'                        This option can be specified multiple times.\n'
+        b'   -r, --rewrite s:r[:observer]\n'
+        b'                        Rewrite received signal s to new signal r before\n'
+        b'                        proxying. To ignore (not proxy) a signal, rewrite it\n'
+        b'                        to 0. The optional observer is a script or executable\n'
+        b'                        to execute when signal s is received (regardless\n'
+        b'                        of any rewriting). It must expect no arguments, but\n'
+        b'                        the DUMB_INIT_SIGNUM and DUMB_INIT_REPLACEMENT_SIGNUM\n'
+        b'                        environment variables will be set. This option can be\n'
+        b'                        specified multiple times.\n'
         b'   -v, --verbose        Print debugging information to stderr.\n'
         b'   -h, --help           Print this help message and exit.\n'
         b'   -V, --version        Print the current version and exit.\n'
@@ -143,8 +149,27 @@ def test_rewrite_errors(extra_args):
     stdout, stderr = proc.communicate()
     assert proc.returncode == 1
     assert stderr == (
-        b'Usage: -r option takes <signum>:<signum>, where <signum> '
-        b'is between 1 and 31.\n'
+        b'Usage: -r option takes <signum>:<signum>[:<observer>], where <signum> is between 1 and 31.\n'
+        b'<observer> must be a path to an executable or an executable that can be found in the PATH. It must expect no arguments.\n'
         b'This option can be specified multiple times.\n'
         b'Use --help for full usage.\n'
+    )
+
+@pytest.mark.parametrize(
+    'extra_args', [
+        ('-r', '12:0:foo'),
+        ('-r', '12:0:/bin/foo'),
+    ],
+)
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_observer_errors(extra_args):
+    proc = Popen(
+        ('dumb-init',) + extra_args + ('echo', 'oh,', 'hi'),
+        stdout=PIPE, stderr=PIPE,
+    )
+    stdout, stderr = proc.communicate()
+    assert proc.returncode == 1
+    assert stderr in (
+        b'[dumb-init] foo: observer not found or not executable\n',
+        b'[dumb-init] /bin/foo: observer not found or not executable\n',
     )
