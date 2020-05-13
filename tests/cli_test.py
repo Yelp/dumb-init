@@ -55,8 +55,11 @@ def test_help_message(flag, current_version):
         b'                        In this mode, signals are only proxied to the\n'
         b'                        direct child and not any of its descendants.\n'
         b'   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n'
-        b'                        To ignore (not proxy) a signal, rewrite it to 0.\n'
-        b'                        This option can be specified multiple times.\n'
+        b'                        Signals may be specified as numbers or names like USR1 or\n'
+        b'                        SIGINT (see -l/--list). To ignore (not proxy) a signal,\n'
+        b'                        rewrite it to 0. This option can be specified multiple\n'
+        b'                        times.\n'
+        b'   -l, --list           Print signal number to name mapping and exit.\n'
         b'   -v, --verbose        Print debugging information to stderr.\n'
         b'   -h, --help           Print this help message and exit.\n'
         b'   -V, --version        Print the current version and exit.\n'
@@ -90,9 +93,9 @@ def test_verbose(flag):
         (
             '(^|\n)\\[dumb-init\\] Child spawned with PID [0-9]+\\.\n'
             '.*'  # child might print here
-            '\\[dumb-init\\] Received signal {signal.SIGCHLD}\\.\n'
+            '\\[dumb-init\\] Received signal {signal.SIGCHLD} \\(CHLD\\)\\.\n'
             '\\[dumb-init\\] A child with PID [0-9]+ exited with exit status 0.\n'
-            '\\[dumb-init\\] Forwarded signal 15 to children\\.\n'
+            '\\[dumb-init\\] Forwarded signal 15 \\(TERM\\) to children\\.\n'
             '\\[dumb-init\\] Child exited with status 0\\. Goodbye\\.\n$'
         ).format(signal=signal).encode('utf8'),
         stderr,
@@ -111,9 +114,9 @@ def test_verbose_and_single_child(flag1, flag2):
     assert re.match(
         (
             '^\\[dumb-init\\] Child spawned with PID [0-9]+\\.\n'
-            '\\[dumb-init\\] Received signal {signal.SIGCHLD}\\.\n'
+            '\\[dumb-init\\] Received signal {signal.SIGCHLD} \\(CHLD\\)\\.\n'
             '\\[dumb-init\\] A child with PID [0-9]+ exited with exit status 0.\n'
-            '\\[dumb-init\\] Forwarded signal 15 to children\\.\n'
+            '\\[dumb-init\\] Forwarded signal 15 \\(TERM\\) to children\\.\n'
             '\\[dumb-init\\] Child exited with status 0\\. Goodbye\\.\n$'
         ).format(signal=signal).encode('utf8'),
         stderr,
@@ -129,6 +132,9 @@ def test_verbose_and_single_child(flag1, flag2):
         ('-r', '15'),
         ('-r', '15::12'),
         ('-r', '15:derp'),
+        ('-r', '15:SIGBAR'),
+        ('-r', 'TERM:SIGBAR'),
+        ('-r', 'FOO:12'),
         ('-r', '15:12', '-r'),
         ('-r', '15:12', '-r', '0'),
         ('-r', '15:12', '-r', '1:32'),
@@ -144,7 +150,7 @@ def test_rewrite_errors(extra_args):
     assert proc.returncode == 1
     assert stderr == (
         b'Usage: -r option takes <signum>:<signum>, where <signum> '
-        b'is between 1 and 31.\n'
+        b'is between 1 and 31, specified by number or name.\n'
         b'This option can be specified multiple times.\n'
         b'Use --help for full usage.\n'
     )

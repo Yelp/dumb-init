@@ -111,8 +111,8 @@ def test_sighup_sigcont_ignored_if_was_session_leader():
 
         output = readall(fd).decode('UTF-8')
 
-        assert 'Ignoring tty hand-off signal {}.'.format(signal.SIGHUP) in output
-        assert 'Ignoring tty hand-off signal {}.'.format(signal.SIGCONT) in output
+        assert 'Ignoring tty hand-off signal {} (HUP).'.format(signal.SIGHUP) in output
+        assert 'Ignoring tty hand-off signal {} (CONT).'.format(signal.SIGCONT) in output
 
-        assert '[dumb-init] Forwarded signal {} to children.'.format(signal.SIGHUP) in output
-        assert '[dumb-init] Forwarded signal {} to children.'.format(signal.SIGCONT) not in output
+        assert '[dumb-init] Forwarded signal {} (HUP) to children.'.format(signal.SIGHUP) in output
+        assert '[dumb-init] Forwarded signal {} (CONT) to children.'.format(signal.SIGCONT) not in output

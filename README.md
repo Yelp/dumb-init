@@ -114,7 +114,10 @@ which always sends a standard signal (e.g. SIGTERM). Some apps require a
 different stop signal in order to do graceful cleanup.
 
 For example, to rewrite the signal SIGTERM (number 15) to SIGQUIT (number 3),
-just add `--rewrite 15:3` on the command line.
+just add `--rewrite 15:3` or `--rewrite TERM:QUIT` on the command line. Signal
+names can be specified with or without the `SIG` prefix (e.g. `TERM` or
+`SIGTERM`). To see the mapping of signal numbers to names on the system in
+question, specify `-l/--list`.
 
 To drop a signal entirely, you can rewrite it to the special number `0`.
 
@@ -218,6 +221,7 @@ ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # or if you use --rewrite or other cli flags
 # ENTRYPOINT ["dumb-init", "--rewrite", "2:3", "--"]
+# ENTRYPOINT ["dumb-init", "--rewrite", "TERM:QUIT", "--"]
 
 CMD ["/my/script", "--with", "--args"]
 ```

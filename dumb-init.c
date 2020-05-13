@@ -46,6 +46,155 @@ pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
 
+typedef struct signame_map_entry {
+    const int signum;
+    const char *signame;
+} signame_map_entry;
+
+static const signame_map_entry signame_map[] = {
+#ifdef SIGABRT
+    { SIGABRT,   "ABRT"   },
+#endif
+#ifdef SIGALRM
+    { SIGALRM,   "ALRM"   },
+#endif
+#ifdef SIGBUS
+    { SIGBUS,    "BUS"    },
+#endif
+#ifdef SIGCHLD
+    { SIGCHLD,   "CHLD"   },
+#endif
+#ifdef SIGCONT
+    { SIGCONT,   "CONT"   },
+#endif
+#ifdef SIGEMT
+    { SIGEMT,    "EMT"    },
+#endif
+#ifdef SIGFPE
+    { SIGFPE,    "FPE"    },
+#endif
+#ifdef SIGHUP
+    { SIGHUP,    "HUP"    },
+#endif
+#ifdef SIGILL
+    { SIGILL,    "ILL"    },
+#endif
+#ifdef SIGINFO
+    { SIGINFO,   "INFO"   },
+#endif
+#ifdef SIGINT
+    { SIGINT,    "INT"    },
+#endif
+#ifdef SIGIO
+    { SIGIO,     "IO"     },
+#endif
+#ifdef SIGIOT
+    { SIGIOT,    "IOT"    },
+#endif
+#ifdef SIGKILL
+    { SIGKILL,   "KILL"   },
+#endif
+#ifdef SIGLOST
+    { SIGLOST,   "LOST"   },
+#endif
+#ifdef SIGPIPE
+    { SIGPIPE,   "PIPE"   },
+#endif
+#ifdef SIGPOLL
+    { SIGPOLL,   "POLL"   },
+#endif
+#ifdef SIGPROF
+    { SIGPROF,   "PROF"   },
+#endif
+#ifdef SIGPWR
+    { SIGPWR,    "PWR"    },
+#endif
+#ifdef SIGQUIT
+    { SIGQUIT,   "QUIT"   },
+#endif
+#ifdef SIGSEGV
+    { SIGSEGV,   "SEGV"   },
+#endif
+#ifdef SIGSTKFLT
+    { SIGSTKFLT, "STKFLT" },
+#endif
+#ifdef SIGSTOP
+    { SIGSTOP,   "STOP"   },
+#endif
+#ifdef SIGSYS
+    { SIGSYS,    "SYS"    },
+#endif
+#ifdef SIGTERM
+    { SIGTERM,   "TERM"   },
+#endif
+#ifdef SIGTRAP
+    { SIGTRAP,   "TRAP"   },
+#endif
+#ifdef SIGTSTP
+    { SIGTSTP,   "TSTP"   },
+#endif
+#ifdef SIGTTIN
+    { SIGTTIN,   "TTIN"   },
+#endif
+#ifdef SIGTTOU
+    { SIGTTOU,   "TTOU"   },
+#endif
+#ifdef SIGUNUSED
+    { SIGUNUSED, "UNUSED" },
+#endif
+#ifdef SIGURG
+    { SIGURG,    "URG"    },
+#endif
+#ifdef SIGUSR1
+    { SIGUSR1,   "USR1"   },
+#endif
+#ifdef SIGUSR2
+    { SIGUSR2,   "USR2"   },
+#endif
+#ifdef SIGVTALRM
+    { SIGVTALRM, "VTALRM" },
+#endif
+#ifdef SIGWINCH
+    { SIGWINCH,  "WINCH"  },
+#endif
+#ifdef SIGXCPU
+    { SIGXCPU,   "XCPU"   },
+#endif
+#ifdef SIGXFSZ
+    { SIGXFSZ,   "XFSZ"   },
+#endif
+};
+int signame_map_size = sizeof(signame_map) / sizeof(signame_map[0]);
+
+const char *signum_to_signame(int signum) {
+    int i;
+
+    for (i = 0; i < signame_map_size; i++) {
+        if (signame_map[i].signum == signum) {
+            return signame_map[i].signame;
+        }
+    }
+
+    return NULL;
+}
+
+int signame_to_signum(const char *signame) {
+    int i;
+    const char *name = signame;
+
+    if (!strncmp(name, "SIG", 3)) {
+        name += 3;
+    }
+
+    for (i = 0; i < signame_map_size; i++) {
+        if (!strcmp(signame_map[i].signame, name)) {
+            return signame_map[i].signum;
+        }
+    }
+
+    return 0;
+}
+
 int translate_signal(int signum) {
     if (signum <= 0 || signum > MAXSIG) {
         return signum;
@@ -54,7 +203,7 @@ int translate_signal(int signum) {
         if (translated == -1) {
             return signum;
         } else {
-            DEBUG("Translating signal %d to %d.\n", signum, translated);
+            DEBUG("Translating signal %d (%s) to %d (%s).\n", signum, signum_to_signame(signum), translated, signum_to_signame(translated));
             return translated;
         }
     }
@@ -64,7 +213,7 @@ void forward_signal(int signum) {
     signum = translate_signal(signum);
     if (signum != 0) {
         kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to children.\n", signum);
+        DEBUG("Forwarded signal %d (%s) to children.\n", signum, signum_to_signame(signum));
     } else {
         DEBUG("Not forwarding signal %d to children (ignored).\n", signum);
     }
@@ -91,10 +240,10 @@ void forward_signal(int signum) {
  *
 */
 void handle_signal(int signum) {
-    DEBUG("Received signal %d.\n", signum);
+    DEBUG("Received signal %d (%s).\n", signum, signum_to_signame(signum));
 
     if (signal_temporary_ignores[signum] == 1) {
-        DEBUG("Ignoring tty hand-off signal %d.\n", signum);
+        DEBUG("Ignoring tty hand-off signal %d (%s).\n", signum, signum_to_signame(signum));
         signal_temporary_ignores[signum] = 0;
     } else if (signum == SIGCHLD) {
         int status, exit_status;
@@ -106,7 +255,7 @@ void handle_signal(int signum) {
             } else {
                 assert(WIFSIGNALED(status));
                 exit_status = 128 + WTERMSIG(status);
-                DEBUG("A child with PID %d was terminated by signal %d.\n", killed_pid, exit_status - 128);
+                DEBUG("A child with PID %d was terminated by signal %d (%s).\n", killed_pid, exit_status - 128, signum_to_signame(exit_status - 128));
             }
 
             if (killed_pid == child_pid) {
@@ -137,8 +286,11 @@ void print_help(char *argv[]) {
         "                        In this mode, signals are only proxied to the\n"
         "                        direct child and not any of its descendants.\n"
         "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
-        "                        To ignore (not proxy) a signal, rewrite it to 0.\n"
-        "                        This option can be specified multiple times.\n"
+        "                        Signals may be specified as numbers or names like USR1 or\n"
+        "                        SIGINT (see -l/--list). To ignore (not proxy) a signal,\n"
+        "                        rewrite it to 0. This option can be specified multiple\n"
+        "                        times.\n"
+        "   -l, --list           Print signal number to name mapping and exit.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -153,7 +305,7 @@ void print_rewrite_signum_help() {
     fprintf(
         stderr,
         "Usage: -r option takes <signum>:<signum>, where <signum> "
-        "is between 1 and %d.\n"
+        "is between 1 and %d, specified by number or name.\n"
         "This option can be specified multiple times.\n"
         "Use --help for full usage.\n",
         MAXSIG
@@ -161,12 +313,41 @@ void print_rewrite_signum_help() {
     exit(1);
 }
 
-void parse_rewrite_signum(char *arg) {
-    int signum, replacement;
+int scansignal(const char *arg, int min, int *pos) {
+    int signum, outpos;
+    char signame[10];
+
     if (
-        sscanf(arg, "%d:%d", &signum, &replacement) == 2 &&
-        (signum >= 1 && signum <= MAXSIG) &&
-        (replacement >= 0 && replacement <= MAXSIG)
+        sscanf(arg, "%d%n", &signum, &outpos) == 1
+        && (signum >= min && signum <= MAXSIG)
+    ) {
+        *pos = outpos;
+        return signum;
+    } else if (
+        (
+            sscanf(arg, "SIG%9[A-Z0-9]%n", signame, &outpos) == 1
+            || sscanf(arg, "%9[A-Z0-9]%n", signame, &outpos) == 1
+        )
+        && (signum = signame_to_signum(signame))
+        && (signum >= min && signum <= MAXSIG)
+    ) {
+        *pos = outpos;
+        return signum;
+    } else {
+        print_rewrite_signum_help();
+    }
+
+    return -1;
+}
+
+void parse_rewrite_signum(char *arg) {
+    int signum, replacement, pos;
+
+    if (
+        (signum = scansignal(arg, 1, &pos)) >= 1
+        && arg[pos] == ':'
+        && (replacement = scansignal(arg += pos + 1, 0, &pos)) >= 0
+        && arg[pos] == 0
     ) {
         signal_rewrite[signum] = replacement;
     } else {
@@ -181,16 +362,17 @@ void set_rewrite_to_sigstop_if_not_defined(int signum) {
 }
 
 char **parse_command(int argc, char *argv[]) {
-    int opt;
+    int opt, i;
     struct option long_options[] = {
         {"help",         no_argument,       NULL, 'h'},
         {"single-child", no_argument,       NULL, 'c'},
         {"rewrite",      required_argument, NULL, 'r'},
+        {"list",         no_argument,       NULL, 'l'},
         {"verbose",      no_argument,       NULL, 'v'},
         {"version",      no_argument,       NULL, 'V'},
         {NULL,                     0,       NULL,   0},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVlcr:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -200,6 +382,12 @@ char **parse_command(int argc, char *argv[]) {
                 break;
             case 'V':
                 fprintf(stderr, "dumb-init v%s", VERSION);
+                exit(0);
+            case 'l':
+                for (i = 1; i <= MAXSIG; i++) {
+                    fprintf(stderr, "%2d: %s\n", i, signum_to_signame(i));
+                }
+
                 exit(0);
             case 'c':
                 use_setsid = 0;
