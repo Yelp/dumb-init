@@ -8,8 +8,6 @@ matrix:
         - env: ITEST_TARGET=itest_bionic
         - env: ITEST_TARGET=itest_buster
         - env: ITEST_TARGET=itest_tox
-        - arch: ppc64le 
-          env: ITEST_TARGET=itest_tox
         - arch: ppc64le
           env: ITEST_TARGET=itest_buster
         - arch: arm64
