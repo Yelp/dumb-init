@@ -1,3 +1,14 @@
+dumb-init (1.2.3) unstable; urgency=medium
+
+  * Fix a bug that can cause `--help` or `--version` to crash in some
+    scenarios.
+
+    https://github.com/Yelp/dumb-init/pull/213
+
+    Thanks to @suve for the patch!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Wed, 02 Dec 2020 10:43:02 -0800
+
 dumb-init (1.2.2) unstable; urgency=medium
 
   * Fix a race condition which can cause the child to receive SIGHUP and
