@@ -4,8 +4,7 @@ services:
 
 matrix:
     include:
-        - env: ITEST_TARGET=itest_xenial
-        - env: ITEST_TARGET=itest_bionic
+        - env: ITEST_TARGET=itest_focal
         - env: ITEST_TARGET=itest_buster
         - env: ITEST_TARGET=itest_tox
         - os: linux-ppc64le
