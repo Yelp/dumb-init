@@ -126,7 +126,7 @@ void handle_signal(int signum) {
 
 void print_help(char *argv[]) {
     fprintf(stderr,
-        "dumb-init v%*s"
+        "dumb-init v%.*s"
         "Usage: %s [option] command [[arg] ...]\n"
         "\n"
         "dumb-init is a simple process supervisor that forwards signals to children.\n"
@@ -199,7 +199,7 @@ char **parse_command(int argc, char *argv[]) {
                 debug = 1;
                 break;
             case 'V':
-                fprintf(stderr, "dumb-init v%*s", VERSION_len, VERSION);
+                fprintf(stderr, "dumb-init v%.*s", VERSION_len, VERSION);
                 exit(0);
             case 'c':
                 use_setsid = 0;
