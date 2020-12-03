@@ -26,7 +26,7 @@ clean-tox:
 .PHONY: release
 release: python-dists
 	cd dist && \
-		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64el \
+		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_x86_64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64le dumb-init_$(VERSION)_s390x.deb dumb-init_$(VERSION)_s390x dumb-init_$(VERSION)_arm64.deb dumb-init_$(VERSION)_aarch64 \
 		> sha256sums
 
 .PHONY: python-dists
