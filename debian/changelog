@@ -1,3 +1,13 @@
+dumb-init (1.2.5) unstable; urgency=medium
+
+  * Change the working directory in the parent process to "/" after forking.
+
+    https://github.com/Yelp/dumb-init/pull/210
+
+    Thanks to @Villemoes for the patch!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Thu, 10 Dec 2020 10:54:47 -0800
+
 dumb-init (1.2.4) unstable; urgency=medium
 
   * Actually fix the bug that can cause `--help` or `--version` to crash in
