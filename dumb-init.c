@@ -326,6 +326,11 @@ int main(int argc, char *argv[]) {
     } else {
         /* parent */
         DEBUG("Child spawned with PID %d.\n", child_pid);
+        if (chdir("/") == -1) {
+             DEBUG("Unable to chdir(\"/\") (errno=%d %s)\n",
+                   errno,
+                   strerror(errno));
+        }
         for (;;) {
             int signum;
             sigwait(&all_signals, &signum);
