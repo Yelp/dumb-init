@@ -76,18 +76,17 @@ void forward_signal(int signum) {
 /*
  * Read /proc and see if there are processes except init(PIDs)
  */
-signed int process_count() {
+signed int is_only_process_running() {
     DIR *dp;
     struct dirent *ep;
     char nonnumber;
     signed int count = 0;
 
     dp = opendir ("/proc");
-    if (dp != NULL)
-    {
+    if (dp != NULL) {
         while ((ep = readdir (dp)) != NULL) {
             nonnumber = 0;
-            for (int i = 0; ep->d_name[i] != 0; ++i) {
+            for (int i = 0; ep->d_name[i] != '\0'; ++i) {
                 if (!isdigit(ep->d_name[i])) {
                     nonnumber = 1;
                     break;
@@ -138,7 +137,7 @@ void handle_signal(int signum) {
         DEBUG("Ignoring tty hand-off signal %d.\n", signum);
         signal_temporary_ignores[signum] = 0;
     } else if (signum == SIGCHLD) {
-        int status, exit_status;
+        int status, exit_status = 0;
         pid_t killed_pid;
         while ((killed_pid = waitpid(-1, &status, WNOHANG)) > 0) {
             if (WIFEXITED(status)) {
@@ -163,10 +162,10 @@ void handle_signal(int signum) {
         }
          
         if ((bereaved == 1) && survive_bereaving) {
-            signed int pc = process_count();
+            signed int pc = is_only_process_running();
             DEBUG("Process count: %d\n", pc);
             if (pc <= 1) {
-                DEBUG("No process left, exitting.\n");
+                DEBUG("No process left, exiting.\n");
                 exit(exit_status);
             }
         }
@@ -193,6 +192,9 @@ void print_help(char *argv[]) {
         "                           In this mode, signals are only proxied to the\n"
         "                           direct child and not any of its descendants.\n"
         "   -b, --survive-bereaving Do not quit when the direct child dies.\n"
+        "                           In this mode, dumb-init will quit when there are no\n"
+        "                           other processes running on the host.\n"
+        "                           This mode requires dumb-init to be running as PID 1.\n"
         "   -r, --rewrite s:r       Rewrite received signal s to new signal r before proxying.\n"
         "                           To ignore (not proxy) a signal, rewrite it to 0.\n"
         "                           This option can be specified multiple times.\n"
@@ -280,6 +282,11 @@ char **parse_command(int argc, char *argv[]) {
             "Try %s --help for full usage.\n",
             argv[0], argv[0]
         );
+        exit(1);
+    }
+
+    if (survive_bereaving && getpid() != 1) {
+        PRINTERR("--survive-bereaving is only valid when dumb-init is running as PID 1.\n");
         exit(1);
     }
 
