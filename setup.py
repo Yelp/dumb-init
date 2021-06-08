@@ -134,4 +134,10 @@ setup(
         'install_cexe': install_cexe,
     },
     distclass=ExeDistribution,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: MIT License',
+        'Intended Audience :: Developers',
+        'Programming Language :: C',
+    ],
 )
