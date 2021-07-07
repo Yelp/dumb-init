@@ -24,7 +24,7 @@ clean-tox:
 	rm -rf .tox
 
 .PHONY: release
-release: python-dists
+release: python-dists python-dists-aarch64
 	cd dist && \
 		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_x86_64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64le dumb-init_$(VERSION)_s390x.deb dumb-init_$(VERSION)_s390x dumb-init_$(VERSION)_arm64.deb dumb-init_$(VERSION)_aarch64 \
 		> sha256sums
@@ -38,6 +38,18 @@ python-dists: VERSION.h
 		quay.io/pypa/manylinux1_x86_64:latest \
 		bash -exc ' \
 			/opt/python/cp35-cp35m/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
+		'
+
+.PHONY: python-dists-aarch64
+python-dists-aarch64: VERSION.h
+	docker run --rm --privileged hypriot/qemu-register
+	docker run \
+		--user $$(id -u):$$(id -g) \
+		-v $(PWD)/dist:/dist:rw \
+		quay.io/pypa/manylinux2014_aarch64:latest \
+		bash -exc ' \
+			/opt/python/cp39-cp39/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
 			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
 		'
 
