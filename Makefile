@@ -54,11 +54,11 @@ builddeb:
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
 	mkdir -p dist
-	docker run --user $$(id -u):$$(id -g) -v $(PWD):/tmp/mnt dumb-init-build
+	docker run --init --user $$(id -u):$$(id -g) -v $(PWD):/tmp/mnt dumb-init-build make builddeb
 
 .PHONY: docker-image
 docker-image:
-	docker build -t dumb-init-build .
+	docker build $(if $(BASE_IMAGE),--build-arg BASE_IMAGE=$(BASE_IMAGE)) -t dumb-init-build .
 
 .PHONY: test
 test:
@@ -68,23 +68,3 @@ test:
 .PHONY: install-hooks
 install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
-
-ITEST_TARGETS = itest_focal itest_buster
-
-.PHONY: itest $(ITEST_TARGETS)
-itest: $(ITEST_TARGETS)
-
-itest_focal: _itest-ubuntu-focal
-itest_buster: _itest-debian-buster
-
-itest_tox:
-	$(DOCKER_RUN_TEST) debian:buster /mnt/ci/docker-tox-test
-
-_itest-%: _itest_deb-% _itest_python-%
-	@true
-
-_itest_python-%:
-	$(DOCKER_RUN_TEST) $(shell sed 's/-/:/' <<< "$*") /mnt/ci/docker-python-test
-
-_itest_deb-%: builddeb-docker
-	$(DOCKER_RUN_TEST) $(shell sed 's/-/:/' <<< "$*") /mnt/ci/docker-deb-test
