@@ -1,8 +1,10 @@
 #!/bin/bash -eux
 set -o pipefail
 
-. /mnt/ci/docker
+apt-get update
+apt-get -y --no-install-recommends install python3-pip procps
 
+cd /mnt
 dpkg -i dist/*.deb
 pip3 install -r requirements-dev.txt
 pytest tests/

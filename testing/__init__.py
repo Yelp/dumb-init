@@ -52,7 +52,16 @@ def child_pids(pid):
     for p in LocalPath('/proc').listdir():
         try:
             stat = open(p.join('stat').strpath).read()
-            m = re.match(r'^\d+ \(.+?\) [a-zA-Z] (\d+) ', stat)
+            m = re.match(
+                r'^\d+ \(.+?\) '
+                # This field, state, is normally a single letter, but can be
+                # "0" if there are some unusual security settings that prevent
+                # reading the process state (happens under GitHub Actions with
+                # QEMU for some reason).
+                '[0a-zA-Z] '
+                r'(\d+) ',
+                stat,
+            )
             assert m, stat
             ppid = int(m.group(1))
             if ppid == pid:
