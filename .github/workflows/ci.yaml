@@ -21,6 +21,7 @@ jobs:
 
         env:
             BASE_IMAGE: ${{ matrix.docker_image }}
+            ARCH: ${{ matrix.arch }}
 
         steps:
             - uses: actions/checkout@v2
@@ -45,6 +46,9 @@ jobs:
               # XXX: This uses the clean base image (not the build one) to make
               # sure it installs in a clean image without any hidden dependencies.
               run: docker run --rm -v $(pwd):/mnt:rw ${{ matrix.docker_image }} /mnt/ci/docker-deb-test
+
+            - name: Build wheels
+              run: sudo make python-dists-$ARCH
 
             - name: Upload build artifacts
               uses: actions/upload-artifact@v2

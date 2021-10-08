@@ -30,14 +30,53 @@ release: python-dists
 		> sha256sums
 
 .PHONY: python-dists
-python-dists: VERSION.h
+python-dists: python-dists-amd64 python-dists-arm64 python-dists-ppc64le python-dists-s390x
+
+.PHONY: python-dists-amd64
+python-dists-x86_64: VERSION.h
 	python setup.py sdist
 	docker run \
 		--user $$(id -u):$$(id -g) \
-		-v $(PWD)/dist:/dist:rw \
+		-v `pwd`/dist:/dist:rw \
 		quay.io/pypa/manylinux1_x86_64:latest \
 		bash -exc ' \
 			/opt/python/cp35-cp35m/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
+		'
+
+.PHONY: python-dists-arm64
+python-dists-aarch64: VERSION.h
+	python setup.py sdist
+	docker run \
+		--user $$(id -u):$$(id -g) \
+		-v `pwd`/dist:/dist:rw \
+		quay.io/pypa/manylinux2014_aarch64:latest \
+		bash -exc ' \
+			/opt/python/cp38-cp38/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
+		'
+
+.PHONY: python-dists-ppc64le
+python-dists-ppc64le: VERSION.h
+	python setup.py sdist
+	docker run \
+		--user $$(id -u):$$(id -g) \
+		-v `pwd`/dist:/dist:rw \
+		quay.io/pypa/manylinux2014_ppc64le:latest \
+		bash -exc ' \
+			/opt/python/cp38-cp38/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
+		'
+
+.PHONY: python-dists-s390x
+python-dists-s390x: VERSION.h
+	python setup.py sdist
+	docker run \
+		--user $$(id -u):$$(id -g) \
+		-v `pwd`/dist:/dist:rw \
+		quay.io/pypa/manylinux2014_s390x:latest \
+		bash -exc ' \
+			/opt/python/cp38-cp38/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
 			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
 		'
 
