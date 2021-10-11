@@ -30,14 +30,17 @@ release: python-dists
 		> sha256sums
 
 .PHONY: python-dists
-python-dists: VERSION.h
+python-dists: python-dists-x86_64 python-dists-aarch64 python-dists-ppc64le python-dists-s390x
+
+.PHONY: python-dists-%
+python-dists-%: VERSION.h
 	python setup.py sdist
 	docker run \
 		--user $$(id -u):$$(id -g) \
-		-v $(PWD)/dist:/dist:rw \
-		quay.io/pypa/manylinux1_x86_64:latest \
+		-v `pwd`/dist:/dist:rw \
+		quay.io/pypa/manylinux2014_$*:latest \
 		bash -exc ' \
-			/opt/python/cp35-cp35m/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			/opt/python/cp38-cp38/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
 			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
 		'
 
