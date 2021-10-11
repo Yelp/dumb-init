@@ -8,20 +8,23 @@ jobs:
             matrix:
                 include:
                     - arch: amd64
+                      manylinux_arch: x86_64
                       docker_image: debian:buster
 
                     - arch: arm64
+                      manylinux_arch: aarch64
                       docker_image: arm64v8/debian:buster
 
                     - arch: ppc64le
+                      manylinux_arch: ppc64le
                       docker_image: ppc64le/debian:buster
 
                     - arch: s390x
+                      manylinux_arch: s390x
                       docker_image: s390x/debian:buster
 
         env:
             BASE_IMAGE: ${{ matrix.docker_image }}
-            ARCH: ${{ matrix.arch }}
 
         steps:
             - uses: actions/checkout@v2
@@ -48,7 +51,7 @@ jobs:
               run: docker run --rm -v $(pwd):/mnt:rw ${{ matrix.docker_image }} /mnt/ci/docker-deb-test
 
             - name: Build wheels
-              run: sudo make python-dists-$ARCH
+              run: sudo make python-dists-${{ matrix.manylinux_arch }}
 
             - name: Upload build artifacts
               uses: actions/upload-artifact@v2
