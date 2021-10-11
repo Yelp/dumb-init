@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.2.3
+    rev: v4.0.1
     hooks:
     -   id: check-added-large-files
     -   id: check-docstring-first
@@ -11,16 +11,17 @@ repos:
     -   id: detect-private-key
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
-    -   id: flake8
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
-    -   id: fix-encoding-pragma
-        args: ['--remove']
 -   repo: https://github.com/pre-commit/mirrors-autopep8
     rev: v1.5.7
     hooks:
     -   id: autopep8
+-   repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+    -   id: flake8
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v2.6.0
     hooks:
