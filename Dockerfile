@@ -10,6 +10,8 @@ RUN : \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
+        curl \
+        debcargo \
         devscripts \
         equivs \
         lintian \
@@ -17,7 +19,8 @@ RUN : \
         python3-setuptools \
         python3-pip \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && curl https://sh.rustup.rs -sSf | sh -s -- -y
 WORKDIR /tmp/mnt
 
 COPY debian/control /control
