@@ -8,7 +8,8 @@ from setuptools import Distribution
 from setuptools import Extension
 from setuptools import setup
 from setuptools.command.install import install as orig_install
-from setuptools_rust import Binding, RustExtension
+from setuptools_rust import Binding
+from setuptools_rust import RustExtension
 
 
 try:
@@ -28,6 +29,7 @@ try:
             return python, abi, plat
 except ImportError:
     bdist_wheel = None
+
 
 class install(orig_install):
     sub_commands = orig_install.sub_commands + [
@@ -63,10 +65,10 @@ setup(
     author='Yelp',
     url='https://github.com/Yelp/dumb-init/',
     platforms='linux',
-    rust_extensions=[RustExtension("dumb-init", binding=Binding.Exec)],
+    rust_extensions=[RustExtension('dumb-init', binding=Binding.Exec)],
     cmdclass={
         'bdist_wheel': bdist_wheel,
         'install': install,
         'install_rexe': install_rexe,
-    }
+    },
 )
