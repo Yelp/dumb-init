@@ -23,12 +23,12 @@ repos:
     hooks:
     -   id: flake8
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.6.0
+    rev: v2.7.1
     hooks:
     -   id: reorder-python-imports
         args: ['--py3-plus']
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.10
+    rev: v1.1.11
     hooks:
     -   id: remove-tabs
 -   repo: https://github.com/asottile/pyupgrade
