@@ -1,9 +1,9 @@
 import os.path
 import subprocess
 import tempfile
+
 from distutils.command.build import build as orig_build
 from distutils.core import Command
-
 from setuptools import Distribution
 from setuptools import Extension
 from setuptools import setup
