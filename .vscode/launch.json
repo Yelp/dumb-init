@@ -1,0 +1,62 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'dumb-init'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=dumb-init",
+                    "--package=dumb-init"
+                ],
+                "filter": {
+                    "name": "dumb-init",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'dumb-init'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=dumb-init",
+                    "--package=dumb-init"
+                ],
+                "filter": {
+                    "name": "dumb-init",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Python: Setup.py",
+            "type": "python",
+            "request": "launch",
+            "program": "setup.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "bdist"
+            ]
+        },
+        {
+            "name": "Python: Attach using Process Id",
+            "type": "python",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}

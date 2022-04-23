@@ -1,3 +1,4 @@
-include dumb-init.c
+include Cargo.toml
+include Cargo.lock
+recursive-include src *
 include VERSION
-include VERSION.h

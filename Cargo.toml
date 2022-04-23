@@ -1,0 +1,13 @@
+[package]
+name = "dumb-init"
+version = "1.2.5"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libc = "0.2.105"
+ioctl-rs = "0.2.0"
+nix = "0.23.0"
+regex = "1.5.4"
+getopts = "0.2.21"

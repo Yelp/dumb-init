@@ -272,7 +272,7 @@ Statically compiled dumb-init is over 700KB due to glibc, but musl is now an
 option. On Debian/Ubuntu `apt-get install musl-tools` to install the source and
 wrappers, then just:
 
-    $ CC=musl-gcc make
+    $ TARGET=x86_64-unknown-linux-musl make
 
 When statically compiled with musl the binary size is around 20KB.
 

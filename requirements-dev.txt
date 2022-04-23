@@ -4,3 +4,4 @@ pytest
 # We should fix this by not depending on the system pytest/python packages at
 # some point.
 pytest-timeout<2.0.0
+setuptools-rust>=0.12.1 # also in tox requirements as we need it as part of setup.py
