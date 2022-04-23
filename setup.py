@@ -123,6 +123,7 @@ setup(
     author='Yelp',
     url='https://github.com/Yelp/dumb-init/',
     platforms='linux',
+    packages=[],
     c_executables=[Extension('dumb-init', ['dumb-init.c'])],
     cmdclass={
         'bdist_wheel': bdist_wheel,
