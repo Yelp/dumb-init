@@ -39,6 +39,8 @@
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
 // User-specified signal rewriting.
 int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
+// User-specified signal delay.
+int signal_delay[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
 // One-time ignores due to TTY quirks. 0 = no skip, 1 = skip the next-received signal.
 char signal_temporary_ignores[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
 
@@ -60,7 +62,15 @@ int translate_signal(int signum) {
     }
 }
 
-void forward_signal(int signum) {
+void forward_signal(int signum, int external_signal) {
+
+    int delay = signal_delay[signum];
+
+    if (external_signal == 1 && delay != -1) {
+        DEBUG("Delay signal %d by %d seconds.\n", signum, delay);
+        sleep(delay);
+    }
+
     signum = translate_signal(signum);
     if (signum != 0) {
         kill(use_setsid ? -child_pid : child_pid, signum);
@@ -110,13 +120,13 @@ void handle_signal(int signum) {
             }
 
             if (killed_pid == child_pid) {
-                forward_signal(SIGTERM);  // send SIGTERM to any remaining children
+                forward_signal(SIGTERM, 0);  // send SIGTERM to any remaining children
                 DEBUG("Child exited with status %d. Goodbye.\n", exit_status);
                 exit(exit_status);
             }
         }
     } else {
-        forward_signal(signum);
+        forward_signal(signum, 1);
         if (signum == SIGTSTP || signum == SIGTTOU || signum == SIGTTIN) {
             DEBUG("Suspending self due to TTY signal.\n");
             kill(getpid(), SIGSTOP);
@@ -139,6 +149,9 @@ void print_help(char *argv[]) {
         "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
         "                        To ignore (not proxy) a signal, rewrite it to 0.\n"
         "                        This option can be specified multiple times.\n"
+        "   -d, --delay s:t      Delay received signal s by t seconds.\n"
+        "                        This is the incoming signal, before any rewrites.\n"
+        "                        This option can be specified multiple times.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -147,6 +160,31 @@ void print_help(char *argv[]) {
         VERSION_len, VERSION,
         argv[0]
     );
+}
+
+void print_delay_signum_help() {
+    fprintf(
+        stderr,
+        "Usage: -d option takes <signum>:<seconds>, where <signum> "
+        "is between 1 and %d and <seconds> is greater than zero\n"
+        "This option can be specified multiple times.\n"
+        "Use --help for full usage.\n",
+        MAXSIG
+    );
+    exit(1);
+}
+
+void parse_delay_signum(char *arg) {
+    int signum, delay;
+    if (
+        sscanf(arg, "%d:%d", &signum, &delay) == 2 &&
+        (signum >= 1 && signum <= MAXSIG) &&
+        (delay > 0)
+    ) {
+        signal_delay[signum] = delay;
+    } else {
+        print_delay_signum_help();
+    }
 }
 
 void print_rewrite_signum_help() {
@@ -186,11 +224,12 @@ char **parse_command(int argc, char *argv[]) {
         {"help",         no_argument,       NULL, 'h'},
         {"single-child", no_argument,       NULL, 'c'},
         {"rewrite",      required_argument, NULL, 'r'},
+        {"delay",        required_argument, NULL, 'd'},
         {"verbose",      no_argument,       NULL, 'v'},
         {"version",      no_argument,       NULL, 'V'},
         {NULL,                     0,       NULL,   0},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVcr:d:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -206,6 +245,9 @@ char **parse_command(int argc, char *argv[]) {
                 break;
             case 'r':
                 parse_rewrite_signum(optarg);
+                break;
+            case 'd':
+                parse_delay_signum(optarg);
                 break;
             default:
                 exit(1);
