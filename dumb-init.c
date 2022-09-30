@@ -128,37 +128,37 @@ void handle_signal(int signum) {
     } else if (use_delay == 1 && signum == SIGALRM) {
       //Look for any overdue signals and forward them
       //Note this means that SIGLARM is NOT propagated to children
-			alarm_set = 0;
+            alarm_set = 0;
       epoch = time(NULL);
 
       DEBUG("Forwarding delayed signals.\n");
 
-			time_t closest_epoch;
-			closest_epoch = 0;
+            time_t closest_epoch;
+            closest_epoch = 0;
 
       for (int signum = 1; signum <= MAXSIG; signum++) {
         if (signal_alarms[signum] != 0) {
 
-					//If epoch now or in the past, forward, otherwise find the closest epoch in the future
+                    //If epoch now or in the past, forward, otherwise find the closest epoch in the future
 
-					if (signal_alarms[signum] <= epoch) {
-						signal_alarms[signum] = 0;
-						forward_signal(signum);
-					} else {
-						if (closest_epoch == 0) {
-							closest_epoch = signal_alarms[signum];
-						} else if (signal_alarms[signum] < closest_epoch) {
-							closest_epoch = signal_alarms[signum];
-						}
-					}
+                    if (signal_alarms[signum] <= epoch) {
+                        signal_alarms[signum] = 0;
+                        forward_signal(signum);
+                    } else {
+                        if (closest_epoch == 0) {
+                            closest_epoch = signal_alarms[signum];
+                        } else if (signal_alarms[signum] < closest_epoch) {
+                            closest_epoch = signal_alarms[signum];
+                        }
+                    }
         }
       }
 
-			if (closest_epoch != 0) {
-				DEBUG("Rescheduling alarm for %ld.\n", closest_epoch);
-				alarm_set = closest_epoch;
-				alarm((int)(closest_epoch - epoch));
-			}
+            if (closest_epoch != 0) {
+                DEBUG("Rescheduling alarm for %ld.\n", closest_epoch);
+                alarm_set = closest_epoch;
+                alarm((int)(closest_epoch - epoch));
+            }
 
     } else {
         unsigned int delay = signal_delay[signum];
@@ -178,10 +178,10 @@ void handle_signal(int signum) {
 
             signal_alarms[signum] = epoch;
 
-						if (alarm_set == 0 || alarm_set > epoch) {
-							alarm_set = epoch;
-							alarm(delay);
-						}
+                        if (alarm_set == 0 || alarm_set > epoch) {
+                            alarm_set = epoch;
+                            alarm(delay);
+                        }
 
         } else {
           forward_signal(signum);
