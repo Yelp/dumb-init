@@ -132,6 +132,15 @@ One caveat with this feature: for job control signals (`SIGTSTP`, `SIGTTIN`,
 `SIGTTOU`), dumb-init will always suspend itself after receiving the signal,
 even if you rewrite it to something else.
 
+### Signal delaying
+
+dumb-init allows delaying incoming signals before proxying them. This is
+useful in cases where a container would still be handling client requests
+after being signaled for a small amount of time. eg Fargate Spot ECS tasks being
+used as targets for an AWS ElasticLoadBalancing Targetgroup
+
+For example, to delay the signal SIGTERM (number 15) by 5 seconds
+just add `--delay 15:5` on the command line.
 
 ## Installing inside Docker containers
 
