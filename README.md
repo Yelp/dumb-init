@@ -133,6 +133,23 @@ One caveat with this feature: for job control signals (`SIGTSTP`, `SIGTTIN`,
 even if you rewrite it to something else.
 
 
+### Signal "observing"
+
+dumb-init also allows executing an "observer" when a signal is received. An
+observer is nothing more than a script or executable that gets called as part of
+the signal-handling process, whether or not the signal is forwarded to the child
+process. You can provide a full path to an observer or let dumb-init search the
+`PATH`. The executable should not require or expect command line arguments (it
+will get none), but two environment variables will be provided,
+`DUMB_INIT_SIGNUM` and `DUMB_INIT_REPLACEMENT_SIGNUM`. They will contain the
+signal _numbers_, not names.
+
+An observer is specified as an optional third parameter to `-r/--rewrite`:
+`--rewrite 12:0:/path/to/observer`. To observe a signal while still passing it
+to the child process, simply replace a signal with itself: `--rewrite
+10:10:some_observer`.
+
+
 ## Installing inside Docker containers
 
 You have a few options for using `dumb-init`:
@@ -216,7 +233,7 @@ entrypoint. An "entrypoint" is a partial command that gets prepended to your
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # or if you use --rewrite or other cli flags
-# ENTRYPOINT ["dumb-init", "--rewrite", "2:3", "--"]
+# ENTRYPOINT ["dumb-init", "--rewrite", "2:3", "--rewrite", "10:10:observer_script", "--"]
 
 CMD ["/my/script", "--with", "--args"]
 ```

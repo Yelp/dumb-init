@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +40,7 @@
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
 // User-specified signal rewriting.
 int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
+char *signal_observers[MAXSIG + 1] = {[0 ... MAXSIG] = NULL};
 // One-time ignores due to TTY quirks. 0 = no skip, 1 = skip the next-received signal.
 char signal_temporary_ignores[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
 
@@ -61,12 +63,41 @@ int translate_signal(int signum) {
 }
 
 void forward_signal(int signum) {
-    signum = translate_signal(signum);
-    if (signum != 0) {
-        kill(use_setsid ? -child_pid : child_pid, signum);
-        DEBUG("Forwarded signal %d to children.\n", signum);
+    int replacement = translate_signal(signum);
+    char *observer = signal_observers[signum];
+    char s[10];
+
+    if (observer) {
+        pid_t observer_pid = fork();
+
+        if (observer_pid < 0) {
+            PRINTERR("%s: unable to fork observer\n", observer);
+        } else if (observer_pid == 0) {
+            /* child */
+            sigset_t all_signals;
+
+            sigfillset(&all_signals);
+            sigprocmask(SIG_UNBLOCK, &all_signals, NULL);
+
+            snprintf(s, 10, "%d", signum);
+            setenv("DUMB_INIT_SIGNUM", s, 1);
+            snprintf(s, 10, "%d", replacement);
+            setenv("DUMB_INIT_REPLACEMENT_SIGNUM", s, 1);
+
+            execl(observer, observer, NULL);
+
+            PRINTERR("%s: %s\n", observer, strerror(errno));
+        } else {
+            /* parent */
+            DEBUG("%s: Observer spawned with PID %d.\n", observer, observer_pid);
+        }
+    }
+
+    if (replacement != 0) {
+        kill(use_setsid ? -child_pid : child_pid, replacement);
+        DEBUG("Forwarded signal %d to children.\n", replacement);
     } else {
-        DEBUG("Not forwarding signal %d to children (ignored).\n", signum);
+        DEBUG("Not forwarding signal %d to children (ignored).\n", replacement);
     }
 }
 
@@ -136,9 +167,15 @@ void print_help(char *argv[]) {
         "   -c, --single-child   Run in single-child mode.\n"
         "                        In this mode, signals are only proxied to the\n"
         "                        direct child and not any of its descendants.\n"
-        "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
-        "                        To ignore (not proxy) a signal, rewrite it to 0.\n"
-        "                        This option can be specified multiple times.\n"
+        "   -r, --rewrite s:r[:observer]\n"
+        "                        Rewrite received signal s to new signal r before\n"
+        "                        proxying. To ignore (not proxy) a signal, rewrite it\n"
+        "                        to 0. The optional observer is a script or executable\n"
+        "                        to execute when signal s is received (regardless\n"
+        "                        of any rewriting). It must expect no arguments, but\n"
+        "                        the DUMB_INIT_SIGNUM and DUMB_INIT_REPLACEMENT_SIGNUM\n"
+        "                        environment variables will be set. This option can be\n"
+        "                        specified multiple times.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -152,8 +189,10 @@ void print_help(char *argv[]) {
 void print_rewrite_signum_help() {
     fprintf(
         stderr,
-        "Usage: -r option takes <signum>:<signum>, where <signum> "
-        "is between 1 and %d.\n"
+        "Usage: -r option takes <signum>:<signum>[:<observer>], "
+        "where <signum> is between 1 and %d.\n"
+        "<observer> must be a path to an executable or an executable "
+        "that can be found in the PATH. It must expect no arguments.\n"
         "This option can be specified multiple times.\n"
         "Use --help for full usage.\n",
         MAXSIG
@@ -161,16 +200,81 @@ void print_rewrite_signum_help() {
     exit(1);
 }
 
+char *find_path(const char *partial) {
+    static char **path_entries = NULL;
+    static int path_count = 0;
+
+    if (strchr(partial, '/')) {
+        return !access(partial, X_OK) ? strdup(partial) : NULL;
+    } else {
+        int i;
+        size_t plen;
+        char file[PATH_MAX];
+
+        if (!path_entries) {
+            char *path, *tokpath, *s;
+
+            path = getenv("PATH");
+
+            if (!(tokpath = strdup(path && strlen(path) ? path : "/bin:/usr/bin:/sbin:/usr/sbin"))) {
+                PRINTERR("cannot get PATH\n");
+                exit(1);
+            }
+
+            for (path_count = 1, s = tokpath; (s = strchr(s, ':')); path_count++, s++) {
+                ;
+            }
+
+            if (!(path_entries = (char**)malloc(path_count * sizeof(char*)))) {
+                PRINTERR("cannot not create PATH entries\n");
+                exit(1);
+            }
+
+            for(i = 0, s = strtok(tokpath, ":"); s; s = strtok(NULL, ":"),  i++) {
+                path_entries[i] = strdup(s);
+            }
+
+            free(tokpath);
+        }
+
+        for (plen = strlen(partial), i = 0; i < path_count; i++) {
+            if (plen + strlen(path_entries[i]) < (PATH_MAX - 2)) {
+                sprintf(file, "%s/%s", path_entries[i], partial);
+
+                if (!access(file, X_OK)) {
+                    return strdup(file);
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
 void parse_rewrite_signum(char *arg) {
-    int signum, replacement;
+    int signum, replacement, position;
+    size_t length;
+    char *observer, *path;
+
     if (
-        sscanf(arg, "%d:%d", &signum, &replacement) == 2 &&
+        sscanf(arg, "%d:%d%n", &signum, &replacement, &position) == 2 &&
         (signum >= 1 && signum <= MAXSIG) &&
         (replacement >= 0 && replacement <= MAXSIG)
     ) {
         signal_rewrite[signum] = replacement;
     } else {
         print_rewrite_signum_help();
+    }
+
+    observer = arg + position;
+
+    if ((*observer++ == ':') && (length = strlen(observer))) {
+      if (!(path = find_path(observer))) {
+          PRINTERR("%s: observer not found or not executable\n", observer);
+          exit(1);
+      }
+
+      signal_observers[signum] = path;
     }
 }
 
