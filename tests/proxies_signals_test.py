@@ -105,3 +105,21 @@ def test_ignored_signals_are_not_proxied():
         proc.send_signal(signal.SIGWINCH)
         proc.send_signal(signal.SIGHUP)
         assert proc.stdout.readline() == '{}\n'.format(signal.SIGHUP).encode('ascii')
+
+
+@pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
+def test_signal_names():
+    """Ensure dumb-init can map signal names."""
+    rewrite_map = {
+        'TERM': 'QUIT',
+        'SIGINT': 0,
+        'WINCH': 0,
+    }
+    with print_signals(_rewrite_map_to_args(rewrite_map)) as (proc, _):
+        proc.send_signal(signal.SIGTERM)
+        proc.send_signal(signal.SIGINT)
+        assert proc.stdout.readline() == '{}\n'.format(signal.SIGQUIT).encode('ascii')
+
+        proc.send_signal(signal.SIGWINCH)
+        proc.send_signal(signal.SIGHUP)
+        assert proc.stdout.readline() == '{}\n'.format(signal.SIGHUP).encode('ascii')
