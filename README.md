@@ -20,6 +20,31 @@ as PID 1 and immediately spawns your command as a child process, taking care to
 properly handle and forward signals as they are received.
 
 
+## Minimal Reproducible Example
+
+1. Save the content below in a Dockerfile
+
+```dockerfile
+FROM node:18.13-alpine3.17
+
+# Comment out the following three lines to see that you won't be able to stop the Node process unless you close the terminal, ie. sending SIGINT (CRTL+C) won't stop it.
+RUN wget -O /usr/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64
+RUN chmod +x /usr/bin/dumb-init
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+RUN echo "(function counter() { let count = 0; setInterval(() => { count++; console.log(count); }, 1000); })();" >> app.js
+
+CMD ["node", "app.js"]
+```
+
+2. Build and run the container using the following commands
+
+```sh
+docker build -t "dumb-init-mre" .
+docker run --rm "dumb-init-mre"
+```
+
+
 ## Why you need an init system
 
 Normally, when you launch a Docker container, the process you're executing
