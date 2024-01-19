@@ -26,7 +26,7 @@ This will start some services then don't let your docker container collapse (fin
  /entrypoint.sh
 
 #!/usr/bin/dumb-init /bin/bash
-/etc/init.d/cron start 
+/etc/init.d/cron start
 echo "|`date`| => Mini docker started" >> /var/log/startup.log
 sleep infinity
 
