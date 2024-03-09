@@ -292,9 +292,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    child_pid = fork();
+    child_pid = vfork();
     if (child_pid < 0) {
-        PRINTERR("Unable to fork. Exiting.\n");
+        PRINTERR("Unable to vfork. Exiting.\n");
         return 1;
     } else if (child_pid == 0) {
         /* child */
@@ -306,7 +306,7 @@ int main(int argc, char *argv[]) {
                     errno,
                     strerror(errno)
                 );
-                exit(1);
+                _exit(1);
             }
 
             if (ioctl(STDIN_FILENO, TIOCSCTTY, 0) == -1) {
@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
 
         // if this point is reached, exec failed, so we should exit nonzero
         PRINTERR("%s: %s\n", cmd[0], strerror(errno));
-        return 2;
+        _exit(2);
     } else {
         /* parent */
         DEBUG("Child spawned with PID %d.\n", child_pid);
@@ -337,4 +337,6 @@ int main(int argc, char *argv[]) {
             handle_signal(signum);
         }
     }
+
+    return 1;
 }
