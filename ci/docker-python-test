@@ -1,12 +1,12 @@
 #!/bin/bash -eux
-set -o pipefail
+set -euo pipefail
 
-. /mnt/ci/docker
+cd /mnt
 
-python setup.py clean
-python setup.py sdist
-pip install -vv dist/*.tar.gz
-pip install -r requirements-dev.txt
-py.test tests/
+python3 setup.py clean
+python3 setup.py sdist
+pip3 install -vv dist/*.tar.gz
+pip3 install -r requirements-dev.txt
+pytest-3 -vv tests/
 
-exec dumb-init /mnt/tests/test-zombies \
+exec dumb-init /mnt/tests/test-zombies

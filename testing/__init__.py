@@ -8,9 +8,6 @@ from contextlib import contextmanager
 from subprocess import PIPE
 from subprocess import Popen
 
-from py._path.local import LocalPath
-
-
 # these signals cause dumb-init to suspend itself
 SUSPEND_SIGNALS = frozenset([
     signal.SIGTSTP,
@@ -21,7 +18,7 @@ SUSPEND_SIGNALS = frozenset([
 NORMAL_SIGNALS = frozenset(
     set(range(1, 32)) -
     {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD} -
-    SUSPEND_SIGNALS
+    SUSPEND_SIGNALS,
 )
 
 
@@ -49,15 +46,25 @@ def print_signals(args=()):
 def child_pids(pid):
     """Return a list of direct child PIDs for the given PID."""
     children = set()
-    for p in LocalPath('/proc').listdir():
+    for p in os.listdir('/proc'):
         try:
-            stat = open(p.join('stat').strpath).read()
-            m = re.match(r'^\d+ \(.+?\) [a-zA-Z] (\d+) ', stat)
+            with open(os.path.join('/proc', p, 'stat')) as f:
+                stat = f.read()
+            m = re.match(
+                r'^\d+ \(.+?\) '
+                # This field, state, is normally a single letter, but can be
+                # "0" if there are some unusual security settings that prevent
+                # reading the process state (happens under GitHub Actions with
+                # QEMU for some reason).
+                '[0a-zA-Z] '
+                r'(\d+) ',
+                stat,
+            )
             assert m, stat
             ppid = int(m.group(1))
             if ppid == pid:
-                children.add(int(p.basename))
-        except IOError:
+                children.add(int(p))
+        except OSError:
             # Happens when the process exits after listing it, or between
             # opening stat and reading it.
             pass
@@ -76,12 +83,13 @@ def pid_tree(pid):
 
 def is_alive(pid):
     """Return whether a process is running with the given PID."""
-    return LocalPath('/proc').join(str(pid)).isdir()
+    return os.path.isdir(os.path.join('/proc', str(pid)))
 
 
 def process_state(pid):
     """Return a process' state, such as "stopped" or "running"."""
-    status = LocalPath('/proc').join(str(pid), 'status').read()
+    with open(os.path.join('/proc', str(pid), 'status')) as f:
+        status = f.read()
     m = re.search(r'^State:\s+[A-Z] \(([a-z]+)\)$', status, re.MULTILINE)
     return m.group(1)
 

@@ -132,7 +132,7 @@ void handle_signal(int signum) {
 
 void print_help(char *argv[]) {
     fprintf(stderr,
-        "dumb-init v%s"
+        "dumb-init v%.*s"
         "Usage: %s [option] command [[arg] ...]\n"
         "\n"
         "dumb-init is a simple process supervisor that forwards signals to children.\n"
@@ -150,7 +150,7 @@ void print_help(char *argv[]) {
         "   -V, --version        Print the current version and exit.\n"
         "\n"
         "Full help is available online at https://github.com/Yelp/dumb-init\n",
-        VERSION,
+        VERSION_len, VERSION,
         argv[0]
     );
 }
@@ -205,7 +205,7 @@ char **parse_command(int argc, char *argv[]) {
                 debug = 1;
                 break;
             case 'V':
-                fprintf(stderr, "dumb-init v%s", VERSION);
+                fprintf(stderr, "dumb-init v%.*s", VERSION_len, VERSION);
                 exit(0);
             case 'c':
                 use_setsid = 0;
@@ -332,6 +332,11 @@ int main(int argc, char *argv[]) {
     } else {
         /* parent */
         DEBUG("Child spawned with PID %d.\n", child_pid);
+        if (chdir("/") == -1) {
+             DEBUG("Unable to chdir(\"/\") (errno=%d %s)\n",
+                   errno,
+                   strerror(errno));
+        }
         for (;;) {
             int signum;
             sigwait(&all_signals, &signum);

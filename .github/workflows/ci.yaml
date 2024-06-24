@@ -1,0 +1,60 @@
+name: CI
+on: push
+jobs:
+    build-and-test:
+        runs-on: ubuntu-20.04
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - arch: amd64
+                      manylinux_arch: x86_64
+                      docker_image: debian:buster
+
+                    - arch: arm64
+                      manylinux_arch: aarch64
+                      docker_image: arm64v8/debian:buster
+
+                    - arch: ppc64le
+                      manylinux_arch: ppc64le
+                      docker_image: ppc64le/debian:buster
+
+                    - arch: s390x
+                      manylinux_arch: s390x
+                      docker_image: s390x/debian:buster
+
+        env:
+            BASE_IMAGE: ${{ matrix.docker_image }}
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Set up QEMU
+              id: qemu
+              uses: docker/setup-qemu-action@v1
+              if: ${{ matrix.arch != 'amd64' }}
+              with:
+                image: tonistiigi/binfmt:latest
+
+            - name: Build Docker image
+              run: make docker-image
+
+            - name: Run python tests
+              run: docker run --rm -v $(pwd):/mnt:rw dumb-init-build /mnt/ci/docker-python-test
+
+            - name: Build Debian package
+              run: docker run --init --rm -v $(pwd):/mnt:rw dumb-init-build make -C /mnt builddeb
+
+            - name: Test built Debian package
+              # XXX: This uses the clean base image (not the build one) to make
+              # sure it installs in a clean image without any hidden dependencies.
+              run: docker run --rm -v $(pwd):/mnt:rw ${{ matrix.docker_image }} /mnt/ci/docker-deb-test
+
+            - name: Build wheels
+              run: sudo make python-dists-${{ matrix.manylinux_arch }}
+
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v2
+              with:
+                  name: ${{ matrix.arch }}
+                  path: dist

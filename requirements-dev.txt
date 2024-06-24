@@ -1,4 +1,6 @@
-mock
 pre-commit>=0.5.0
 pytest
-pytest-timeout
+# TODO: This pin is to work around an issue where the system pytest is too old.
+# We should fix this by not depending on the system pytest/python packages at
+# some point.
+pytest-timeout<2.0.0

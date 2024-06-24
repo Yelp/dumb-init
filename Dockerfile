@@ -1,24 +1,28 @@
-FROM debian:stretch
+ARG BASE_IMAGE=debian:buster
+FROM $BASE_IMAGE
 
 LABEL maintainer="Chris Kuehl <ckuehl@yelp.com>"
-
-# The default mirrors are too flaky to run reliably in CI.
-RUN sed -E \
-    '/security\.debian/! s@http://[^/]+/@http://mirrors.kernel.org/@' \
-    -i /etc/apt/sources.list
 
 # Install the bare minimum dependencies necessary for working with Debian
 # packages. Build dependencies should be added under "Build-Depends" inside
 # debian/control instead.
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN : \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
         devscripts \
         equivs \
         lintian \
-    && rm -rf /var/lib/apt/lists/* && apt-get clean
-WORKDIR /mnt
+        python3-distutils \
+        python3-setuptools \
+        python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp/mnt
 
-ENTRYPOINT apt-get update && \
-    mk-build-deps -i --tool 'apt-get --no-install-recommends -y' && \
-    make builddeb
+COPY debian/control /control
+RUN : \
+    && apt-get update \
+    && mk-build-deps --install --tool 'apt-get -y --no-install-recommends' /control \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*

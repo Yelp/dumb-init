@@ -26,18 +26,21 @@ clean-tox:
 .PHONY: release
 release: python-dists
 	cd dist && \
-		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_amd64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64el \
+		sha256sum --binary dumb-init_$(VERSION)_amd64.deb dumb-init_$(VERSION)_x86_64 dumb-init_$(VERSION)_ppc64el.deb dumb-init_$(VERSION)_ppc64le dumb-init_$(VERSION)_s390x.deb dumb-init_$(VERSION)_s390x dumb-init_$(VERSION)_arm64.deb dumb-init_$(VERSION)_aarch64 \
 		> sha256sums
 
 .PHONY: python-dists
-python-dists: VERSION.h
+python-dists: python-dists-x86_64 python-dists-aarch64 python-dists-ppc64le python-dists-s390x
+
+.PHONY: python-dists-%
+python-dists-%: VERSION.h
 	python setup.py sdist
 	docker run \
 		--user $$(id -u):$$(id -g) \
-		-v $(PWD)/dist:/dist:rw \
-		quay.io/pypa/manylinux1_x86_64:latest \
+		-v `pwd`/dist:/dist:rw \
+		quay.io/pypa/manylinux2014_$*:latest \
 		bash -exc ' \
-			/opt/python/cp35-cp35m/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
+			/opt/python/cp38-cp38/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
 			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
 		'
 
@@ -49,16 +52,16 @@ builddeb:
 	# Extract the built binary from the Debian package
 	dpkg-deb --fsys-tarfile dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture).deb | \
 		tar -C dist --strip=3 -xvf - ./usr/bin/dumb-init
-	mv dist/dumb-init dist/dumb-init_$(VERSION)_$(shell dpkg --print-architecture)
+	mv dist/dumb-init dist/dumb-init_$(VERSION)_$(shell uname -m)
 
 .PHONY: builddeb-docker
 builddeb-docker: docker-image
 	mkdir -p dist
-	docker run -v $(PWD):/mnt dumb-init-build
+	docker run --init --user $$(id -u):$$(id -g) -v $(PWD):/tmp/mnt dumb-init-build make builddeb
 
 .PHONY: docker-image
 docker-image:
-	docker build -t dumb-init-build .
+	docker build $(if $(BASE_IMAGE),--build-arg BASE_IMAGE=$(BASE_IMAGE)) -t dumb-init-build .
 
 .PHONY: test
 test:
@@ -68,25 +71,3 @@ test:
 .PHONY: install-hooks
 install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
-
-ITEST_TARGETS = itest_trusty itest_xenial itest_bionic itest_stretch
-
-.PHONY: itest $(ITEST_TARGETS)
-itest: $(ITEST_TARGETS)
-
-itest_trusty: _itest-ubuntu-trusty
-itest_xenial: _itest-ubuntu-xenial
-itest_bionic: _itest-ubuntu-bionic
-itest_stretch: _itest-debian-stretch
-
-itest_tox:
-	$(DOCKER_RUN_TEST) ubuntu:bionic /mnt/ci/docker-tox-test
-
-_itest-%: _itest_deb-% _itest_python-%
-	@true
-
-_itest_python-%:
-	$(DOCKER_RUN_TEST) $(shell sed 's/-/:/' <<< "$*") /mnt/ci/docker-python-test
-
-_itest_deb-%: builddeb-docker
-	$(DOCKER_RUN_TEST) $(shell sed 's/-/:/' <<< "$*") /mnt/ci/docker-deb-test

@@ -12,12 +12,34 @@ def current_version():
     return open('VERSION').read().strip()
 
 
+def normalize_stderr(stderr):
+    # dumb-init prints out argv[0] in its usage message. This should always be
+    # just "dumb-init" under regular test scenarios here since that is how we
+    # call it, but in CI the use of QEMU causes the argv[0] to be replaced with
+    # the full path.
+    #
+    # This is supposed to be avoidable by:
+    #   1) Setting the "P" flag in the binfmt register:
+    #      https://en.wikipedia.org/wiki/Binfmt_misc#Registration
+    #      This can be done by setting the QEMU_PRESERVE_PARENT env var when
+    #      calling binfmt.
+    #
+    #   2) Setting the "QEMU_ARGV0" env var to empty string for *all*
+    #      processes:
+    #      https://bugs.launchpad.net/qemu/+bug/1835839
+    #
+    # I can get it working properly in CI outside of Docker, but for some
+    # reason not during Docker builds. This doesn't affect the built executable
+    # so I decided to just punt on it.
+    return re.sub(rb'(^|(?<=\s))[a-z/.]+/dumb-init', b'dumb-init', stderr)
+
+
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_no_arguments_prints_usage():
     proc = Popen(('dumb-init'), stderr=PIPE)
     _, stderr = proc.communicate()
     assert proc.returncode != 0
-    assert stderr == (
+    assert normalize_stderr(stderr) == (
         b'Usage: dumb-init [option] program [args]\n'
         b'Try dumb-init --help for full usage.\n'
     )
@@ -28,7 +50,7 @@ def test_exits_invalid_with_invalid_args():
     proc = Popen(('dumb-init', '--yolo', '/bin/true'), stderr=PIPE)
     _, stderr = proc.communicate()
     assert proc.returncode == 1
-    assert stderr in (
+    assert normalize_stderr(stderr) in (
         b"dumb-init: unrecognized option '--yolo'\n",  # glibc
         b'dumb-init: unrecognized option: yolo\n',  # musl
     )
@@ -43,7 +65,7 @@ def test_help_message(flag, current_version):
     proc = Popen(('dumb-init', flag), stderr=PIPE)
     _, stderr = proc.communicate()
     assert proc.returncode == 0
-    assert stderr == (
+    assert normalize_stderr(stderr) == (
         b'dumb-init v' + current_version.encode('ascii') + b'\n'
         b'Usage: dumb-init [option] command [[arg] ...]\n'
         b'\n'
@@ -120,18 +142,20 @@ def test_verbose_and_single_child(flag1, flag2):
     )
 
 
-@pytest.mark.parametrize('extra_args', [
-    ('-r',),
-    ('-r', ''),
-    ('-r', 'herp'),
-    ('-r', 'herp:derp'),
-    ('-r', '15'),
-    ('-r', '15::12'),
-    ('-r', '15:derp'),
-    ('-r', '15:12', '-r'),
-    ('-r', '15:12', '-r', '0'),
-    ('-r', '15:12', '-r', '1:32'),
-])
+@pytest.mark.parametrize(
+    'extra_args', [
+        ('-r',),
+        ('-r', ''),
+        ('-r', 'herp'),
+        ('-r', 'herp:derp'),
+        ('-r', '15'),
+        ('-r', '15::12'),
+        ('-r', '15:derp'),
+        ('-r', '15:12', '-r'),
+        ('-r', '15:12', '-r', '0'),
+        ('-r', '15:12', '-r', '1:32'),
+    ],
+)
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_rewrite_errors(extra_args):
     proc = Popen(

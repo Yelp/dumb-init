@@ -17,7 +17,7 @@ def spawn_and_kill_pipeline():
     proc = Popen((
         'dumb-init',
         'sh', '-c',
-        "yes 'oh, hi' | tail & yes error | tail >&2"
+        "yes 'oh, hi' | tail & yes error | tail >&2",
     ))
 
     def assert_living_pids():
@@ -129,12 +129,14 @@ def test_processes_dont_receive_term_on_exit_if_no_setsid():
     os.kill(child_pid, signal.SIGKILL)
 
 
-@pytest.mark.parametrize('args', [
-    ('/doesnotexist',),
-    ('--', '/doesnotexist'),
-    ('-c', '/doesnotexist'),
-    ('--single-child', '--', '/doesnotexist'),
-])
+@pytest.mark.parametrize(
+    'args', [
+        ('/doesnotexist',),
+        ('--', '/doesnotexist'),
+        ('-c', '/doesnotexist'),
+        ('--single-child', '--', '/doesnotexist'),
+    ],
+)
 @pytest.mark.usefixtures('both_debug_modes', 'both_setsid_modes')
 def test_fails_nonzero_with_bad_exec(args):
     """If dumb-init can't exec as requested, it should exit nonzero."""

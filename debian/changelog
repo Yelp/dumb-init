@@ -1,3 +1,35 @@
+dumb-init (1.2.5) unstable; urgency=medium
+
+  * Change the working directory in the parent process to "/" after forking.
+
+    https://github.com/Yelp/dumb-init/pull/210
+
+    Thanks to @Villemoes for the patch!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Thu, 10 Dec 2020 10:54:47 -0800
+
+dumb-init (1.2.4) unstable; urgency=medium
+
+  * Actually fix the bug that can cause `--help` or `--version` to crash in
+    some scenarios.
+
+    https://github.com/Yelp/dumb-init/pull/215
+
+    Thanks to @suve for the patch!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Mon, 07 Dec 2020 11:58:06 -0800
+
+dumb-init (1.2.3) unstable; urgency=medium
+
+  * Fix a bug that can cause `--help` or `--version` to crash in some
+    scenarios.
+
+    https://github.com/Yelp/dumb-init/pull/213
+
+    Thanks to @suve for the patch!
+
+ -- Chris Kuehl <ckuehl@yelp.com>  Wed, 02 Dec 2020 10:43:02 -0800
+
 dumb-init (1.2.2) unstable; urgency=medium
 
   * Fix a race condition which can cause the child to receive SIGHUP and

@@ -4,8 +4,6 @@
 Since all signals are printed and otherwise ignored, you'll need to send
 SIGKILL (kill -9) to this process to actually end it.
 """
-from __future__ import print_function
-
 import os
 import signal
 import sys
@@ -13,7 +11,7 @@ import time
 
 
 CATCHABLE_SIGNALS = frozenset(
-    set(range(1, 32)) - {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD}
+    set(range(1, 32)) - {signal.SIGKILL, signal.SIGSTOP, signal.SIGCHLD},
 )
 
 

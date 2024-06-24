@@ -1,8 +1,7 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
+    rev: v4.4.0
     hooks:
-    -   id: autopep8-wrapper
     -   id: check-added-large-files
     -   id: check-docstring-first
     -   id: check-executables-have-shebangs
@@ -12,19 +11,33 @@ repos:
     -   id: detect-private-key
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
-    -   id: flake8
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.0
+    hooks:
+    -   id: autopep8
+-   repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+    -   id: flake8
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v1.0.1
+    rev: v3.9.0
     hooks:
     -   id: reorder-python-imports
+        args: ['--py3-plus']
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.5
+    rev: v1.3.1
     hooks:
     -   id: remove-tabs
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v1.11.3
+    rev: v3.3.0
     hooks:
     -   id: pyupgrade
+        args: ['--py3-plus']
+-   repo: https://github.com/asottile/add-trailing-comma
+    rev: v2.3.0
+    hooks:
+    -   id: add-trailing-comma
+        args: ['--py36-plus']

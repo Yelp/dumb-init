@@ -1,11 +1,9 @@
-from __future__ import print_function
-
 import os.path
 import subprocess
 import tempfile
+
 from distutils.command.build import build as orig_build
 from distutils.core import Command
-
 from setuptools import Distribution
 from setuptools import Extension
 from setuptools import setup
@@ -58,7 +56,8 @@ class install_cexe(Command):
         # this initializes attributes based on other commands' attributes
         self.set_undefined_options('build', ('build_scripts', 'build_dir'))
         self.set_undefined_options(
-            'install', ('install_scripts', 'install_dir'))
+            'install', ('install_scripts', 'install_dir'),
+        )
 
     def run(self):
 
@@ -124,6 +123,7 @@ setup(
     author='Yelp',
     url='https://github.com/Yelp/dumb-init/',
     platforms='linux',
+    packages=[],
     c_executables=[Extension('dumb-init', ['dumb-init.c'])],
     cmdclass={
         'bdist_wheel': bdist_wheel,

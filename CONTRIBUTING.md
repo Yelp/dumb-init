@@ -29,11 +29,11 @@ The process to release a new version is:
 4. Commit the changes and tag the commit like `v1.0.0`.
 5. `git push --tags origin master`
 6. Wait for Travis to run, then find and download the binary and Debian
-   packages for both amd64 and ppc64el; there will be links printed at the end
-   of the Travis output. Put these into your `dist` directory.
+   packages for all architectures; there will be links printed at the
+   end of the Travis output. Put these into your `dist` directory.
 7. Run `make release`
 8. Run `twine upload --skip-existing dist/*.tar.gz dist/*.whl` to upload the
    new version to PyPI
-9. Upload the resulting Debian package, binary (inside the `dist` directory),
-   and sha256sums file to a new [GitHub
+9. Upload the resulting Debian packages, binaries, and sha256sums file (all
+   inside the `dist` directory) to a new [GitHub
    release](https://github.com/Yelp/dumb-init/releases)
