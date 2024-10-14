@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
     -   id: check-added-large-files
     -   id: check-docstring-first
@@ -14,30 +14,30 @@ repos:
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v2.0.0
+-   repo: https://github.com/hhatto/autopep8
+    rev: v2.3.1
     hooks:
     -   id: autopep8
 -   repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 7.1.1
     hooks:
     -   id: flake8
--   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
+-   repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.14.0
     hooks:
     -   id: reorder-python-imports
         args: ['--py3-plus']
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.1
+    rev: v1.5.5
     hooks:
     -   id: remove-tabs
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.0
+    rev: v3.18.0
     hooks:
     -   id: pyupgrade
         args: ['--py3-plus']
 -   repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.3.0
+    rev: v3.1.0
     hooks:
     -   id: add-trailing-comma
         args: ['--py36-plus']
