@@ -121,6 +121,7 @@ setup(
     description='Simple wrapper script which proxies signals to a child',
     version=open('VERSION').read().strip(),
     author='Yelp',
+    license='MIT',
     url='https://github.com/Yelp/dumb-init/',
     platforms='linux',
     packages=[],
