@@ -1,6 +1,9 @@
 #!/bin/bash -eux
 set -o pipefail
 
+# Allow pip from modifying the system packages
+export PIP_BREAK_SYSTEM_PACKAGES=1
+
 apt-get update
 apt-get -y --no-install-recommends install python3-pip procps
 
