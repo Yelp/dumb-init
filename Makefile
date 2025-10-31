@@ -30,15 +30,19 @@ release: python-dists
 		> sha256sums
 
 .PHONY: python-dists
-python-dists: python-dists-x86_64 python-dists-aarch64 python-dists-ppc64le python-dists-s390x
+python-dists: python-dists-manylinux2014_x86_64 python-dists-manylinux2014_aarch64 python-dists-manylinux2014_ppc64le python-dists-manylinux2014_s390x python-dists-manylinux_2_39_riscv64
 
 .PHONY: python-dists-%
 python-dists-%: VERSION.h
 	python setup.py sdist
+	if test -f dist/dumb-init-$(VERSION).tar.gz; then \
+		mv dist/dumb-init-$(VERSION).tar.gz dist/dumb_init-$(VERSION).tar.gz; \
+	fi
 	docker run \
+		$(if $(TARGETARCH),--platform linux/$(TARGETARCH)) \
 		--user $$(id -u):$$(id -g) \
 		-v `pwd`/dist:/dist:rw \
-		quay.io/pypa/manylinux2014_$*:latest \
+		quay.io/pypa/$*:latest \
 		bash -exc ' \
 			/opt/python/cp38-cp38/bin/pip wheel --wheel-dir /tmp /dist/*.tar.gz && \
 			auditwheel repair --wheel-dir /dist /tmp/*.whl --wheel-dir /dist \
@@ -61,7 +65,12 @@ builddeb-docker: docker-image
 
 .PHONY: docker-image
 docker-image:
-	docker build $(if $(BASE_IMAGE),--build-arg BASE_IMAGE=$(BASE_IMAGE)) -t dumb-init-build .
+	docker buildx build \
+		$(if $(TARGETARCH),--platform linux/$(TARGETARCH)) \
+		$(if $(BASE_IMAGE),--build-arg BASE_IMAGE=$(BASE_IMAGE)) \
+		--load \
+		-t dumb-init-build \
+		.
 
 .PHONY: test
 test:

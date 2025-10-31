@@ -8,23 +8,28 @@ jobs:
             matrix:
                 include:
                     - arch: amd64
-                      manylinux_arch: x86_64
+                      manylinux_arch: manylinux2014_x86_64
                       docker_image: debian:bookworm
 
                     - arch: arm64
-                      manylinux_arch: aarch64
+                      manylinux_arch: manylinux2014_aarch64
                       docker_image: arm64v8/debian:bookworm
 
                     - arch: ppc64le
-                      manylinux_arch: ppc64le
+                      manylinux_arch: manylinux2014_ppc64le
                       docker_image: ppc64le/debian:bookworm
 
                     - arch: s390x
-                      manylinux_arch: s390x
+                      manylinux_arch: manylinux2014_s390x
                       docker_image: s390x/debian:bookworm
+
+                    - arch: riscv64
+                      manylinux_arch: manylinux_2_39_riscv64
+                      docker_image: riscv64/debian:trixie
 
         env:
             BASE_IMAGE: ${{ matrix.docker_image }}
+            TARGETARCH: ${{ matrix.arch }}
 
         steps:
             - uses: actions/checkout@v2
