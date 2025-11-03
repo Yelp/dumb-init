@@ -58,6 +58,9 @@ jobs:
             - name: Build wheels
               run: sudo make python-dists-${{ matrix.manylinux_arch }}
 
+            - name: Compute sha256sums
+              run: sha256sum dist/* | sudo tee dist/sha256sums
+
             - name: Upload build artifacts
               uses: actions/upload-artifact@v4
               with:
