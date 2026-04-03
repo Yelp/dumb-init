@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 #include "VERSION.h"
 
 #define PRINTERR(...) do { \
@@ -39,12 +40,18 @@
 // Indices are one-indexed (signal 1 is at index 1). Index zero is unused.
 // User-specified signal rewriting.
 int signal_rewrite[MAXSIG + 1] = {[0 ... MAXSIG] = -1};
+// User-specified signal delay.
+unsigned int signal_delay[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
+time_t signal_alarms[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
+
 // One-time ignores due to TTY quirks. 0 = no skip, 1 = skip the next-received signal.
 char signal_temporary_ignores[MAXSIG + 1] = {[0 ... MAXSIG] = 0};
 
 pid_t child_pid = -1;
 char debug = 0;
 char use_setsid = 1;
+char use_delay = 0;
+time_t alarm_set = 0;
 
 int translate_signal(int signum) {
     if (signum <= 0 || signum > MAXSIG) {
@@ -91,6 +98,9 @@ void forward_signal(int signum) {
  *
 */
 void handle_signal(int signum) {
+
+    time_t epoch;
+
     DEBUG("Received signal %d.\n", signum);
 
     if (signal_temporary_ignores[signum] == 1) {
@@ -115,8 +125,67 @@ void handle_signal(int signum) {
                 exit(exit_status);
             }
         }
+    } else if (use_delay == 1 && signum == SIGALRM) {
+      //Look for any overdue signals and forward them
+      //Note this means that SIGLARM is NOT propagated to children
+            alarm_set = 0;
+      epoch = time(NULL);
+
+      DEBUG("Forwarding delayed signals.\n");
+
+            time_t closest_epoch;
+            closest_epoch = 0;
+
+      for (int signum = 1; signum <= MAXSIG; signum++) {
+        if (signal_alarms[signum] != 0) {
+
+                    //If epoch now or in the past, forward, otherwise find the closest epoch in the future
+
+                    if (signal_alarms[signum] <= epoch) {
+                        signal_alarms[signum] = 0;
+                        forward_signal(signum);
+                    } else {
+                        if (closest_epoch == 0) {
+                            closest_epoch = signal_alarms[signum];
+                        } else if (signal_alarms[signum] < closest_epoch) {
+                            closest_epoch = signal_alarms[signum];
+                        }
+                    }
+        }
+      }
+
+            if (closest_epoch != 0) {
+                DEBUG("Rescheduling alarm for %ld.\n", closest_epoch);
+                alarm_set = closest_epoch;
+                alarm((int)(closest_epoch - epoch));
+            }
+
     } else {
-        forward_signal(signum);
+        unsigned int delay = signal_delay[signum];
+
+        if (delay != 0) {
+            DEBUG("Delay signal %d by %d seconds.\n", signum, delay);
+
+            if (signal_alarms[signum] != 0) {
+              DEBUG("Signal %d already received and waiting. Ignoring.\n", signum);
+              return;
+            }
+
+            epoch = time(NULL);
+            epoch += delay;
+
+            DEBUG("Will signal %d at %ld.\n", signum, epoch);
+
+            signal_alarms[signum] = epoch;
+
+                        if (alarm_set == 0 || alarm_set > epoch) {
+                            alarm_set = epoch;
+                            alarm(delay);
+                        }
+
+        } else {
+          forward_signal(signum);
+        }
         if (signum == SIGTSTP || signum == SIGTTOU || signum == SIGTTIN) {
             DEBUG("Suspending self due to TTY signal.\n");
             kill(getpid(), SIGSTOP);
@@ -139,6 +208,10 @@ void print_help(char *argv[]) {
         "   -r, --rewrite s:r    Rewrite received signal s to new signal r before proxying.\n"
         "                        To ignore (not proxy) a signal, rewrite it to 0.\n"
         "                        This option can be specified multiple times.\n"
+        "   -d, --delay s:t      Delay received signal s by t seconds.\n"
+        "                        This is the incoming signal, before any rewrites.\n"
+        "                        This option can be specified multiple times.\n"
+        "                        If this option is used, SIGALRM is NOT propagated to the child process.\n"
         "   -v, --verbose        Print debugging information to stderr.\n"
         "   -h, --help           Print this help message and exit.\n"
         "   -V, --version        Print the current version and exit.\n"
@@ -147,6 +220,33 @@ void print_help(char *argv[]) {
         VERSION_len, VERSION,
         argv[0]
     );
+}
+
+void print_delay_signum_help() {
+    fprintf(
+        stderr,
+        "Usage: -d option takes <signum>:<seconds>, where <signum> "
+        "is between 1 and %d and <seconds> is greater than zero\n"
+        "This option can be specified multiple times.\n"
+        "Use --help for full usage.\n",
+        MAXSIG
+    );
+    exit(1);
+}
+
+void parse_delay_signum(char *arg) {
+    //TODO - Don't allow SIGLARM to be delayed?
+    int signum, delay;
+    if (
+        sscanf(arg, "%d:%d", &signum, &delay) == 2 &&
+        (signum >= 1 && signum <= MAXSIG) &&
+        (delay > 0)
+    ) {
+        signal_delay[signum] = delay;
+        use_delay = 1;
+    } else {
+        print_delay_signum_help();
+    }
 }
 
 void print_rewrite_signum_help() {
@@ -186,11 +286,12 @@ char **parse_command(int argc, char *argv[]) {
         {"help",         no_argument,       NULL, 'h'},
         {"single-child", no_argument,       NULL, 'c'},
         {"rewrite",      required_argument, NULL, 'r'},
+        {"delay",        required_argument, NULL, 'd'},
         {"verbose",      no_argument,       NULL, 'v'},
         {"version",      no_argument,       NULL, 'V'},
         {NULL,                     0,       NULL,   0},
     };
-    while ((opt = getopt_long(argc, argv, "+hvVcr:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "+hvVcr:d:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv);
@@ -206,6 +307,9 @@ char **parse_command(int argc, char *argv[]) {
                 break;
             case 'r':
                 parse_rewrite_signum(optarg);
+                break;
+            case 'd':
+                parse_delay_signum(optarg);
                 break;
             default:
                 exit(1);
@@ -258,6 +362,10 @@ int main(int argc, char *argv[]) {
     int i = 0;
     for (i = 1; i <= MAXSIG; i++) {
         signal(i, dummy);
+    }
+
+    if (use_delay) {
+      DEBUG("Delays specified. SIGALRM will not be propagated.\n");
     }
 
     /*
