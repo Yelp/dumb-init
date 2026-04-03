@@ -2,29 +2,34 @@ name: CI
 on: push
 jobs:
     build-and-test:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
                 include:
                     - arch: amd64
-                      manylinux_arch: x86_64
-                      docker_image: debian:buster
+                      manylinux_arch: manylinux2014_x86_64
+                      docker_image: debian:bookworm
 
                     - arch: arm64
-                      manylinux_arch: aarch64
-                      docker_image: arm64v8/debian:buster
+                      manylinux_arch: manylinux2014_aarch64
+                      docker_image: arm64v8/debian:bookworm
 
                     - arch: ppc64le
-                      manylinux_arch: ppc64le
-                      docker_image: ppc64le/debian:buster
+                      manylinux_arch: manylinux2014_ppc64le
+                      docker_image: ppc64le/debian:bookworm
 
                     - arch: s390x
-                      manylinux_arch: s390x
-                      docker_image: s390x/debian:buster
+                      manylinux_arch: manylinux2014_s390x
+                      docker_image: s390x/debian:bookworm
+
+                    - arch: riscv64
+                      manylinux_arch: manylinux_2_39_riscv64
+                      docker_image: riscv64/debian:trixie
 
         env:
             BASE_IMAGE: ${{ matrix.docker_image }}
+            TARGETARCH: ${{ matrix.arch }}
 
         steps:
             - uses: actions/checkout@v2
@@ -48,13 +53,16 @@ jobs:
             - name: Test built Debian package
               # XXX: This uses the clean base image (not the build one) to make
               # sure it installs in a clean image without any hidden dependencies.
-              run: docker run --rm -v $(pwd):/mnt:rw ${{ matrix.docker_image }} /mnt/ci/docker-deb-test
+              run: docker run --platform linux/${{ matrix.arch }} --rm -v $(pwd):/mnt:rw ${{ matrix.docker_image }} /mnt/ci/docker-deb-test
 
             - name: Build wheels
               run: sudo make python-dists-${{ matrix.manylinux_arch }}
 
+            - name: Compute sha256sums
+              run: sha256sum dist/* | sudo tee dist/sha256sums
+
             - name: Upload build artifacts
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
                   name: ${{ matrix.arch }}
                   path: dist

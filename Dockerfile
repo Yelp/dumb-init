@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=debian:buster
+ARG BASE_IMAGE=debian:bookworm
 FROM $BASE_IMAGE
 
 LABEL maintainer="Chris Kuehl <ckuehl@yelp.com>"
@@ -13,7 +13,6 @@ RUN : \
         devscripts \
         equivs \
         lintian \
-        python3-distutils \
         python3-setuptools \
         python3-pip \
     && apt-get clean \
