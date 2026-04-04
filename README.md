@@ -19,6 +19,17 @@ should have been destroyed.
 as PID 1 and immediately spawns your command as a child process, taking care to
 properly handle and forward signals as they are received.
 
+## Best example of using dumb-init
+
+This will start some services then don't let your docker container collapse (finish).
+
+ /entrypoint.sh
+
+#!/usr/bin/dumb-init /bin/bash
+/etc/init.d/cron start
+echo "|`date`| => Mini docker started" >> /var/log/startup.log
+sleep infinity
+
 
 ## Why you need an init system
 
