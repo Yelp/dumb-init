@@ -15,6 +15,11 @@ VERSION.h: VERSION
 	echo '// Run `make VERSION.h` to update it after modifying VERSION.' >> VERSION.h
 	xxd -i VERSION >> VERSION.h
 
+.PHONY: install
+install: build
+	install -d $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 dumb-init $(DESTDIR)$(PREFIX)/bin/
+
 .PHONY: clean
 clean: clean-tox
 	rm -rf dumb-init dist/ *.deb
