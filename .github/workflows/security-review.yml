@@ -1,0 +1,30 @@
+# Managed by terraform, do not edit manually
+name: Security Review
+permissions:
+  pull-requests: write
+  contents: read
+  id-token: write
+on:
+  pull_request:
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_DEV_ACCOUNT_ID }}:role/security-review-bot
+          aws-region: us-west-2
+      - uses: anthropics/claude-code-security-review@0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+        with:
+          comment-pr: true
+          claude-api-key: "github-actions"
+          claude-model: "us.anthropic.claude-opus-4-6-v1"
+          run-every-commit: true
+        env:
+          CLAUDE_CODE_USE_BEDROCK: "1"
+          AWS_REGION: "us-west-2"
